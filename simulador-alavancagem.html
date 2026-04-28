@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master Prime - Alavancagem Patrimonial</title>
+<style>
+  :root { --navy:#2D3F5E; --navy-dark:#1E2D45; --bg:#F4F5F7; --card:#FFFFFF; --border:#E5E7EB; --text:#1F2937; --text-muted:#6B7280; --soft-blue:#F1F5F9; --green:#10B981; --green-soft:#D1FAE5; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;}
+  header{background:var(--navy);color:#fff;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;}
+  .brand{display:flex;align-items:center;gap:14px;}
+  .brand-mark{width:36px;height:36px;background:var(--navy-dark);border:1px solid rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;}
+  .brand-text h1{font-size:16px;font-weight:600;}
+  .brand-text p{font-size:11px;color:rgba(255,255,255,0.7);letter-spacing:1.2px;text-transform:uppercase;margin-top:2px;}
+  main{max-width:1280px;margin:0 auto;padding:32px;}
+  h2.section-title{font-size:22px;font-weight:600;color:var(--navy);margin-bottom:4px;text-align:center;}
+  .subtitle{font-size:12px;color:var(--text-muted);text-align:center;margin-bottom:24px;letter-spacing:1px;text-transform:uppercase;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px;}
+  .card-section-title{font-size:13px;font-weight:700;color:var(--navy);letter-spacing:1.5px;text-transform:uppercase;padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+  .card-section-title .reset-btn{margin-left:auto;background:none;border:1px solid var(--border);color:var(--text-muted);cursor:pointer;padding:4px 10px;border-radius:4px;font-size:11px;}
+  .group-card{background:var(--soft-blue);border:1px solid var(--border);border-radius:10px;padding:18px;}
+  .group-card .gc-title{font-size:12px;font-weight:600;color:var(--navy);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;}
+  .grid{display:grid;gap:14px;}
+  .grid-2{grid-template-columns:repeat(2,1fr);}
+  .grid-3{grid-template-columns:repeat(3,1fr);}
+  .grid-4{grid-template-columns:repeat(4,1fr);}
+  @media (max-width:768px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
+  .field{position:relative;}
+  .field label{position:absolute;top:-7px;left:12px;background:var(--card);padding:0 6px;font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;font-weight:500;z-index:1;}
+  .group-card .field label{background:var(--soft-blue);}
+  .field input,.field select{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:#fff;color:var(--text);}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--navy);}
+  .field input:disabled,.field select:disabled{background:var(--soft-blue);color:var(--text-muted);}
+  .field select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B7280' d='M2 4l4 4 4-4z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+  .toggle-input{position:relative;display:inline-block;width:32px;height:18px;}
+  .toggle-input input{opacity:0;width:0;height:0;}
+  .toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#D1D5DB;border-radius:18px;}
+  .toggle-slider::before{position:absolute;content:"";height:14px;width:14px;left:2px;top:2px;background:white;border-radius:50%;transition:.2s;}
+  .toggle-input input:checked+.toggle-slider{background:var(--navy);}
+  .toggle-input input:checked+.toggle-slider::before{transform:translateX(14px);}
+  .result-row{background:var(--soft-blue);border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;}
+  .result-row strong{font-size:12px;color:var(--navy);letter-spacing:1px;text-transform:uppercase;font-weight:500;}
+  .result-row .value{font-size:18px;font-weight:600;color:var(--navy);}
+  .result-primary{background:var(--navy);color:white;padding:14px 20px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;}
+  .result-primary strong{color:rgba(255,255,255,0.7);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;font-weight:500;}
+  .result-primary .value{font-size:22px;font-weight:700;color:#fff;}
+  .actions{display:flex;justify-content:flex-end;gap:12px;margin-top:24px;padding-bottom:32px;}
+  button.primary,button.secondary{padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid transparent;}
+  button.primary{background:var(--navy);color:#fff;border-color:var(--navy);}
+  button.primary:hover{background:var(--navy-dark);}
+  button.secondary{background:transparent;color:var(--text-muted);border-color:var(--border);}
+  button.secondary:hover{background:var(--bg);}
+</style>
+<script>if (new URLSearchParams(location.search).get('embed') === '1') document.documentElement.classList.add('embedded');</script>
+<style>html.embedded header { display: none; } html.embedded main { padding-top: 16px; }</style>
+</head>
+<body>
+<header><div class="brand"><div class="brand-mark">M</div><div class="brand-text"><h1>Master Prime</h1><p>Simulador de Consórcio</p></div></div></header>
+<main>
+  <h2 class="section-title">Alavancagem Patrimonial</h2>
+  <div class="subtitle">Veja como o consórcio aumenta seu poder de compra de imóveis</div>
+
+  <section class="card">
+    <div class="card-section-title">Consórcio<button type="button" class="reset-btn" id="resetConsorcio">Limpar</button></div>
+    <div class="group-card">
+      <div class="gc-title">Proposta</div>
+      <div class="grid grid-3">
+        <div class="field"><label>Crédito</label><input type="text" id="credito" placeholder="R$ 0,00" data-mask="money"></div>
+        <div class="field"><label>Prazo (meses)</label><input type="text" id="prazo" placeholder="0" data-mask="int"></div>
+        <div class="field"><label>% Taxa de administração</label><input type="text" id="taxaAdm" placeholder="0,00 %" data-mask="pct2"></div>
+        <div class="field"><label>% Fundo de reserva</label><input type="text" id="fundo" placeholder="0,00 %" data-mask="pct2"></div>
+        <div class="field"><label>% Reajuste</label><input type="text" id="reajuste" placeholder="0,00 %" data-mask="pct2"></div>
+        <div class="field"><label>Expectativa contemplação (meses)</label><input type="text" id="expectativa" value="1" data-mask="int"></div>
+      </div>
+      <div style="margin-top:16px;"><div class="result-primary"><strong>Parcela mensal</strong><span class="value" id="parcelaMensal">R$ 0,00</span></div></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-section-title">Imóvel<button type="button" class="reset-btn" id="resetImovel">Limpar</button></div>
+    <div class="grid grid-2">
+      <div class="group-card">
+        <div class="gc-title">Operação</div>
+        <div class="grid grid-2">
+          <div class="field"><label>Valor de mercado</label><input type="text" id="imValor" placeholder="R$ 0,00" data-mask="money"></div>
+          <div class="field"><label>Valor de compra</label><input type="text" id="imCompra" placeholder="R$ 0,00" data-mask="money"></div>
+          <div class="field"><label>% Valorização anual</label><input type="text" id="imValorizacao" value="6,39 %" data-mask="pct2"></div>
+        </div>
+      </div>
+      <div class="group-card">
+        <div class="gc-title">Aluguel</div>
+        <div class="grid grid-2">
+          <div class="field"><label>Prestação do aluguel</label><input type="text" id="alPrestacao" placeholder="R$ 0,00" data-mask="money"></div>
+          <div class="field"><label>% Correção anual</label><input type="text" id="alCorrecao" value="5,32 %" data-mask="pct2"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-section-title">Resultado da Alavancagem</div>
+    <div class="grid grid-2">
+      <div class="result-row"><strong>Valor alavancado do imóvel</strong><span class="value" id="resAlavancado">R$ 0,00</span></div>
+      <div class="result-row"><strong>Valorização do imóvel</strong><span class="value" id="resValorizacao">R$ 0,00</span></div>
+      <div class="result-row"><strong>Diferença aluguel × parcela (período)</strong><span class="value" id="resDiferenca">R$ 0,00</span></div>
+      <div class="result-primary"><strong>Patrimônio total</strong><span class="value" id="resPatrimonio">R$ 0,00</span></div>
+    </div>
+  </section>
+
+  <div class="actions">
+    <button class="secondary" id="btnLimpar">Limpar tudo</button>
+    <button class="primary" id="btnPdf">Baixar PDF</button>
+  </div>
+</main>
+
+<script>
+function maskMoney(v){const d=String(v).replace(/\D/g,'');if(!d)return'';const c=parseInt(d,10);return'R$ '+Math.floor(c/100).toLocaleString('pt-BR')+','+String(c%100).padStart(2,'0');}
+function unmaskMoney(v){const d=String(v).replace(/\D/g,'');return parseInt(d||'0',10)/100;}
+function maskPct(v,dec=2){const c=String(v).replace(',','.').replace(/[^\d.]/g,'');if(!c)return'';const n=parseFloat(c);return isNaN(n)?'':n.toFixed(dec).replace('.',',')+' %';}
+function unmaskPct(v){return parseFloat(String(v).replace('%','').replace(',','.').replace(/[^\d.\-]/g,'').trim()||'0');}
+function maskInt(v){return String(v).replace(/\D/g,'');}
+function fmtMoney(n){if(!isFinite(n)||isNaN(n))n=0;return'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+
+document.querySelectorAll('input[data-mask]').forEach(inp=>{
+  const t=inp.dataset.mask;
+  inp.addEventListener('input',e=>{if(t==='money')e.target.value=maskMoney(e.target.value);else if(t==='int')e.target.value=maskInt(e.target.value);recalc();});
+  inp.addEventListener('blur',e=>{if(t==='pct2')e.target.value=maskPct(e.target.value,2);});
+  inp.addEventListener('focus',e=>{if(t==='pct2'){const n=unmaskPct(e.target.value);if(n)e.target.value=String(n).replace('.',',');}});
+});
+
+function recalc(){
+  const credito = unmaskMoney(document.getElementById('credito').value);
+  const prazo = parseInt(document.getElementById('prazo').value || '0', 10);
+  const taxaAdm = unmaskPct(document.getElementById('taxaAdm').value)/100;
+  const fundo = unmaskPct(document.getElementById('fundo').value)/100;
+  const reajuste = unmaskPct(document.getElementById('reajuste').value)/100;
+  const expectativa = parseInt(document.getElementById('expectativa').value || '1', 10);
+
+  const totalDevido = credito*(1+taxaAdm+fundo);
+  const parcelaMensal = prazo > 0 ? totalDevido/prazo : 0;
+  document.getElementById('parcelaMensal').textContent = fmtMoney(parcelaMensal);
+
+  const imValor = unmaskMoney(document.getElementById('imValor').value);
+  const imCompra = unmaskMoney(document.getElementById('imCompra').value);
+  const imValorizacao = unmaskPct(document.getElementById('imValorizacao').value)/100;
+  const alPrestacao = unmaskMoney(document.getElementById('alPrestacao').value);
+  const alCorrecao = unmaskPct(document.getElementById('alCorrecao').value)/100;
+
+  const anos = prazo/12;
+  // Alavancagem: comparar o que poderia comprar à vista (com a parcela poupada) vs o que tem com consórcio (imóvel inteiro)
+  const valorAlavancado = Math.max(0, credito - imCompra); // valor que o consórcio "cobre" além do disponível
+  const valorizacaoFinal = imValor * (Math.pow(1+imValorizacao, anos) - 1);
+  // Diferença aluguel × parcela acumulada no período
+  let diferencaAcumulada = 0, alAtual = alPrestacao;
+  for(let m=1; m<=prazo; m++){
+    diferencaAcumulada += (alAtual - parcelaMensal);
+    if(m % 12 === 0) alAtual *= (1+alCorrecao);
+  }
+  const patrimonio = imValor * Math.pow(1+imValorizacao, anos) + diferencaAcumulada;
+
+  document.getElementById('resAlavancado').textContent = fmtMoney(valorAlavancado);
+  document.getElementById('resValorizacao').textContent = fmtMoney(valorizacaoFinal);
+  document.getElementById('resDiferenca').textContent = fmtMoney(diferencaAcumulada);
+  document.getElementById('resPatrimonio').textContent = fmtMoney(patrimonio);
+}
+
+document.getElementById('resetConsorcio').addEventListener('click',()=>{
+  ['credito','prazo','taxaAdm','fundo','reajuste'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('expectativa').value='1';
+  recalc();
+});
+document.getElementById('resetImovel').addEventListener('click',()=>{
+  ['imValor','imCompra','alPrestacao'].forEach(id=>document.getElementById(id).value='');
+  recalc();
+});
+document.getElementById('btnLimpar').addEventListener('click',()=>{
+  document.getElementById('resetConsorcio').click();
+  document.getElementById('resetImovel').click();
+});
+document.getElementById('btnPdf').addEventListener('click',()=>alert('PDF da Alavancagem Patrimonial será implementado depois.'));
+recalc();
+</script>
+</body>
+</html>

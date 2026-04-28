@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master Prime - Simuladores de Consórcio</title>
+<style>
+  :root {
+    --navy: #2D3F5E;
+    --navy-dark: #1E2D45;
+    --navy-light: #3A4F73;
+    --bg: #F4F5F7;
+    --card: #FFFFFF;
+    --border: #E5E7EB;
+    --text: #1F2937;
+    --text-muted: #6B7280;
+    --soft-blue: #F1F5F9;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body { font-family: 'Inter', -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; display: flex; flex-direction: column; }
+
+  header.app-header { background: var(--navy); color: #fff; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.08); z-index: 10; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .brand-mark { width: 36px; height: 36px; background: var(--navy-dark); border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 14px; }
+  .brand-text h1 { font-size: 16px; font-weight: 600; letter-spacing: 0.3px; }
+  .brand-text p { font-size: 11px; color: rgba(255,255,255,0.7); letter-spacing: 1.2px; text-transform: uppercase; margin-top: 2px; }
+  .tag-test { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.85); border: 1px solid rgba(255,255,255,0.25); padding: 4px 10px; border-radius: 4px; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; font-weight: 500; }
+
+  .layout { flex: 1; display: flex; min-height: 0; }
+  aside.sidebar { width: 270px; background: var(--navy); color: #fff; padding: 24px 0; flex-shrink: 0; overflow-y: auto; }
+  .sidebar-section { font-size: 11px; color: rgba(255,255,255,0.4); letter-spacing: 1.5px; text-transform: uppercase; padding: 0 24px 12px; }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 24px; cursor: pointer; color: rgba(255,255,255,0.8); border-left: 3px solid transparent; font-size: 13px; transition: background 0.15s; }
+  .nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+  .nav-item.active { background: rgba(255,255,255,0.1); color: #fff; border-left-color: #fff; font-weight: 600; }
+  .nav-item .icon { width: 18px; height: 18px; opacity: 0.7; flex-shrink: 0; }
+  .nav-item.active .icon { opacity: 1; }
+  .nav-item.coming-soon { opacity: 0.6; }
+  .nav-item.coming-soon::after { content: 'em breve'; font-size: 9px; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px; margin-left: auto; letter-spacing: 0.5px; text-transform: uppercase; }
+
+  main.content { flex: 1; min-width: 0; min-height: 0; background: var(--bg); position: relative; }
+  iframe.sim-frame { width: 100%; height: 100%; border: none; background: var(--bg); }
+
+  .footer-info { padding: 16px 24px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 32px; }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="brand">
+    <div class="brand-mark">M</div>
+    <div class="brand-text">
+      <h1>Master Prime</h1>
+      <p>Simuladores de Consórcio</p>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">Simuladores</div>
+    <div class="nav-item active" data-sim="simples">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h6M9 17h6"/></svg>
+      Operação Simples
+    </div>
+    <div class="nav-item" data-sim="estruturada">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Operação Estruturada
+    </div>
+    <div class="nav-item" data-sim="investimento">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>
+      Como Investimento
+    </div>
+    <div class="nav-item" data-sim="alavancagem">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21l9-9 4 4 8-8"/><path d="M3 21h18"/></svg>
+      Alavancagem Patrimonial
+    </div>
+    <div class="nav-item" data-sim="financiamento">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M5 8l7-5 7 5M5 16l7 5 7-5"/></svg>
+      Consórcio x Financiamento
+    </div>
+    <div class="nav-item" data-sim="avista">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>
+      Consórcio x À Vista
+    </div>
+    <div class="nav-item" data-sim="consorcio">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/></svg>
+      Consórcio x Consórcio
+    </div>
+    <div class="footer-info">Master Prime<br>Simulação de cotas de consórcio</div>
+  </aside>
+
+  <main class="content">
+    <iframe class="sim-frame" id="simFrame" src="simulador-master-prime-teste.html?embed=1"></iframe>
+  </main>
+</div>
+
+<script>
+const SIMS = {
+  simples: { url: 'simulador-master-prime-teste.html?embed=1' },
+  estruturada: { url: 'simulador-estruturada-master-prime-teste.html?embed=1' },
+  investimento: { url: 'simulador-investimento.html?embed=1' },
+  alavancagem: { url: 'simulador-alavancagem.html?embed=1' },
+  financiamento: { url: 'simulador-financiamento.html?embed=1' },
+  avista: { url: 'simulador-avista.html?embed=1' },
+  consorcio: { url: 'simulador-consorcio-x-consorcio.html?embed=1' }
+};
+
+document.querySelectorAll('.nav-item[data-sim]').forEach(item => {
+  item.addEventListener('click', () => {
+    const key = item.dataset.sim;
+    const sim = SIMS[key];
+    if (!sim) return;
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    item.classList.add('active');
+    document.getElementById('simFrame').src = sim.url;
+  });
+});
+</script>
+
+</body>
+</html>

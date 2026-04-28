@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Em breve</title>
+<style>
+  body { font-family: 'Inter', -apple-system, system-ui, sans-serif; background: #F4F5F7; color: #1F2937; margin: 0; height: 100vh; display: flex; align-items: center; justify-content: center; padding: 32px; }
+  .box { text-align: center; max-width: 480px; }
+  .icon { width: 56px; height: 56px; margin: 0 auto 20px; color: #2D3F5E; opacity: 0.6; }
+  h1 { font-size: 22px; font-weight: 600; color: #2D3F5E; margin-bottom: 10px; }
+  p { color: #6B7280; font-size: 14px; line-height: 1.6; }
+  .badge { display: inline-block; background: #2D3F5E; color: #fff; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; padding: 4px 10px; border-radius: 4px; font-weight: 500; margin-top: 16px; }
+</style>
+</head>
+<body>
+<div class="box">
+  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+  <h1 id="titulo">Em breve</h1>
+  <p>Este simulador está em construção. As fórmulas já foram mapeadas contra o Conkey/Simulakey — em breve estará disponível com a marca Master Prime.</p>
+  <div class="badge">Próxima entrega</div>
+</div>
+<script>
+const t = new URLSearchParams(location.search).get('titulo');
+if (t) document.getElementById('titulo').textContent = t;
+</script>
+</body>
+</html>
