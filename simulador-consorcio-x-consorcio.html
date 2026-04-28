@@ -45,9 +45,12 @@
   button.primary:hover { background: var(--navy-dark); }
   button.secondary { background: transparent; color: var(--text-muted); border-color: var(--border); }
   button.secondary:hover { background: var(--bg); }
+  body.pdf-mode .actions, body.pdf-mode .reset-btn, body.pdf-mode .row-actions, body.pdf-mode #btnPdf, body.pdf-mode #btnLimpar { display: none !important; }
+  body.pdf-mode header { background: #2D3F5E !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 </style>
 <script>if (new URLSearchParams(location.search).get('embed') === '1') document.documentElement.classList.add('embedded');</script>
 <style>html.embedded header { display: none; } html.embedded main { padding-top: 16px; }</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 <header>
@@ -371,7 +374,18 @@ document.getElementById('btnLimpar').addEventListener('click',()=>{
   });
   recalc();
 });
-document.getElementById('btnPdf').addEventListener('click',()=>alert('PDF do Consórcio × Consórcio será implementado depois.'));
+document.getElementById('btnPdf').addEventListener('click', () => {
+  document.body.classList.add('pdf-mode');
+  const hoje = new Date(); const dd = String(hoje.getDate()).padStart(2,'0'); const mm = String(hoje.getMonth()+1).padStart(2,'0');
+  html2pdf().set({
+    margin: [10,10,10,10],
+    filename: 'master-prime-consorcio-x-consorcio-' + dd + mm + hoje.getFullYear() + '.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#FFFFFF' },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['css','legacy'] }
+  }).from(document.body).save().then(() => document.body.classList.remove('pdf-mode'));
+});
 recalc();
 </script>
 </body>

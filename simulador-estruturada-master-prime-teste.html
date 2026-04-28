@@ -126,11 +126,14 @@
   .hidden { display: none !important; }
   .reset-btn { margin-left: auto; background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; padding: 4px 10px; border-radius: 4px; font-size: 11px; }
   .reset-btn:hover { background: var(--bg); }
+  body.pdf-mode .actions, body.pdf-mode .reset-btn, body.pdf-mode .row-actions, body.pdf-mode #btnPdf, body.pdf-mode #btnLimpar { display: none !important; }
+  body.pdf-mode header { background: #2D3F5E !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 </style>
 </head>
 <body>
 <script>if (new URLSearchParams(location.search).get('embed') === '1') document.documentElement.classList.add('embedded');</script>
 <style>html.embedded header { display: none; } html.embedded main { padding-top: 16px; }</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <header>
   <div class="brand">
@@ -948,7 +951,16 @@ document.getElementById('btnLimpar').addEventListener('click', () => {
 
 // PDF placeholder — TODO depois
 document.getElementById('btnPdf').addEventListener('click', () => {
-  alert('Baixar PDF da Operação Estruturada será implementado depois — primeiro precisamos validar os números na tabela. Adicione operações e me confirme se os totais batem com o Conkey.');
+  document.body.classList.add('pdf-mode');
+  const hoje = new Date(); const dd = String(hoje.getDate()).padStart(2,'0'); const mm = String(hoje.getMonth()+1).padStart(2,'0');
+  html2pdf().set({
+    margin: [10,10,10,10],
+    filename: 'master-prime-estruturada-' + dd + mm + hoje.getFullYear() + '.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#FFFFFF' },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['css','legacy'] }
+  }).from(document.body).save().then(() => document.body.classList.remove('pdf-mode'));
 });
 
 // Inicialização
