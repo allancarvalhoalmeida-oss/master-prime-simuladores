@@ -5,57 +5,69 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Master Prime - Consórcio como Investimento</title>
 <style>
-  :root { --navy:#2D3F5E; --navy-dark:#1E2D45; --bg:#F4F5F7; --card:#FFFFFF; --border:#E5E7EB; --text:#1F2937; --text-muted:#6B7280; --soft-blue:#F1F5F9; --green:#10B981; --green-soft:#D1FAE5; }
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'Inter',-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;}
-  header{background:var(--navy);color:#fff;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;}
-  .brand{display:flex;align-items:center;gap:14px;}
-  .brand-mark{width:36px;height:36px;background:var(--navy-dark);border:1px solid rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;}
-  .brand-text h1{font-size:16px;font-weight:600;}
-  .brand-text p{font-size:11px;color:rgba(255,255,255,0.7);letter-spacing:1.2px;text-transform:uppercase;margin-top:2px;}
-  main{max-width:1280px;margin:0 auto;padding:32px;}
-  h2.section-title{font-size:22px;font-weight:600;color:var(--navy);margin-bottom:4px;text-align:center;}
-  .subtitle{font-size:12px;color:var(--text-muted);text-align:center;margin-bottom:24px;letter-spacing:1px;text-transform:uppercase;}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px;}
-  .card-section-title{font-size:13px;font-weight:700;color:var(--navy);letter-spacing:1.5px;text-transform:uppercase;padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:18px;display:flex;align-items:center;gap:10px;}
-  .card-section-title .reset-btn{margin-left:auto;background:none;border:1px solid var(--border);color:var(--text-muted);cursor:pointer;padding:4px 10px;border-radius:4px;font-size:11px;}
-  .group-card{background:var(--soft-blue);border:1px solid var(--border);border-radius:10px;padding:18px;}
-  .group-card .gc-title{font-size:12px;font-weight:600;color:var(--navy);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;}
-  .grid{display:grid;gap:14px;}
-  .grid-2{grid-template-columns:repeat(2,1fr);}
-  .grid-3{grid-template-columns:repeat(3,1fr);}
-  .grid-4{grid-template-columns:repeat(4,1fr);}
-  @media (max-width:768px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
-  .field{position:relative;}
-  .field label{position:absolute;top:-7px;left:12px;background:var(--card);padding:0 6px;font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;font-weight:500;z-index:1;}
-  .group-card .field label{background:var(--soft-blue);}
-  .field input,.field select{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:#fff;color:var(--text);}
-  .field input:focus,.field select:focus{outline:none;border-color:var(--navy);}
-  .field input:disabled,.field select:disabled{background:var(--soft-blue);color:var(--text-muted);}
-  .field select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B7280' d='M2 4l4 4 4-4z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
-  .strategy-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px;}
-  @media (max-width:1100px){.strategy-grid{grid-template-columns:repeat(2,1fr);}}
-  @media (max-width:600px){.strategy-grid{grid-template-columns:1fr;}}
-  .strategy-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;}
-  .strategy-card .icon{width:32px;height:32px;color:var(--navy);margin-bottom:10px;}
-  .strategy-card .label{font-size:11px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;font-weight:600;margin-bottom:4px;}
-  .strategy-card .value{font-size:18px;font-weight:700;color:var(--navy);}
-  .strategy-card.primary{background:var(--navy);color:#fff;}
-  .strategy-card.primary .icon{color:#fff;}
-  .strategy-card.primary .label{color:rgba(255,255,255,0.7);}
-  .strategy-card.primary .value{color:#fff;font-size:20px;}
-  .result-row{background:var(--soft-blue);border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;}
-  .result-row strong{font-size:12px;color:var(--navy);letter-spacing:1px;text-transform:uppercase;font-weight:500;}
-  .result-row .value{font-size:18px;font-weight:600;color:var(--navy);}
-  .result-primary{background:var(--navy);color:white;padding:14px 20px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;}
-  .result-primary strong{color:rgba(255,255,255,0.7);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;font-weight:500;}
-  .result-primary .value{font-size:22px;font-weight:700;color:#fff;}
-  .actions{display:flex;justify-content:flex-end;gap:12px;margin-top:24px;padding-bottom:32px;}
-  button.primary,button.secondary{padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid transparent;}
-  button.primary{background:var(--navy);color:#fff;border-color:var(--navy);}
-  button.primary:hover{background:var(--navy-dark);}
-  button.secondary{background:transparent;color:var(--text-muted);border-color:var(--border);}
-  button.secondary:hover{background:var(--bg);}
+  :root { --navy:#2D3F5E; --navy-dark:#1E2D45; --bg:#F4F5F7; --card:#FFFFFF; --border:#E5E7EB; --text:#1F2937; --text-muted:#6B7280; --soft-blue:#F1F5F9; --green:#10B981; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; }
+  header { background: var(--navy); color: #fff; padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .brand-mark { width: 36px; height: 36px; background: var(--navy-dark); border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 14px; }
+  .brand-text h1 { font-size: 16px; font-weight: 600; }
+  .brand-text p { font-size: 11px; color: rgba(255,255,255,0.7); letter-spacing: 1.2px; text-transform: uppercase; margin-top: 2px; }
+  main { max-width: 1400px; margin: 0 auto; padding: 32px; }
+  h2.section-title { font-size: 22px; font-weight: 600; color: var(--navy); margin-bottom: 24px; text-align: center; letter-spacing: 0.5px; }
+  .ops-table-wrapper { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 24px; }
+  .ops-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .ops-table thead { background: var(--navy); color: #fff; }
+  .ops-table thead th { padding: 12px 8px; font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; text-align: center; }
+  .ops-table tbody td { padding: 12px 8px; text-align: center; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .ops-table tbody tr:last-child td { border-bottom: none; }
+  .ops-table tfoot { background: var(--navy); color: #fff; font-weight: 600; }
+  .ops-table tfoot td { padding: 12px 8px; text-align: center; font-size: 12px; white-space: nowrap; }
+  .ops-table .empty-row td { padding: 32px; text-align: center; color: var(--text-muted); font-style: italic; white-space: normal; }
+  .ops-table .add-row td { padding: 0; text-align: center; }
+  .add-btn { background: #fff; color: var(--navy); border: none; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 14px 28px; font-size: 13px; font-weight: 600; cursor: pointer; width: 100%; }
+  .add-btn:hover { background: var(--soft-blue); }
+  .row-actions { display: flex; gap: 6px; justify-content: center; }
+  .row-actions button { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 11px; color: var(--text-muted); }
+  .strategy-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+  @media (max-width: 1100px) { .strategy-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { .strategy-grid { grid-template-columns: 1fr; } }
+  .strategy-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+  .strategy-card .icon { width: 32px; height: 32px; color: var(--navy); margin-bottom: 10px; }
+  .strategy-card .label { font-size: 11px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; font-weight: 600; margin-bottom: 4px; }
+  .strategy-card .value { font-size: 18px; font-weight: 700; color: var(--navy); }
+  .strategy-card.primary { background: var(--navy); color: #fff; }
+  .strategy-card.primary .icon { color: #fff; }
+  .strategy-card.primary .label { color: rgba(255,255,255,0.7); }
+  .strategy-card.primary .value { color: #fff; font-size: 22px; }
+
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .modal-overlay.hidden { display: none; }
+  .modal { background: var(--card); border-radius: 12px; max-width: 900px; width: 100%; max-height: 92vh; overflow-y: auto; padding: 24px; }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 14px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
+  .modal-header h2 { font-size: 16px; font-weight: 600; color: var(--navy); }
+  .modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-muted); }
+
+  .group-card { background: var(--soft-blue); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 14px; }
+  .group-card .gc-title { font-size: 12px; font-weight: 600; color: var(--navy); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
+  .grid { display: grid; gap: 14px; }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 768px) { .grid-3, .grid-4 { grid-template-columns: 1fr; } }
+  .field { position: relative; }
+  .field label { position: absolute; top: -7px; left: 12px; background: var(--soft-blue); padding: 0 6px; font-size: 11px; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; font-weight: 500; z-index: 1; }
+  .field input, .field select { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; background: #fff; color: var(--text); }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--navy); }
+  .field input:disabled, .field select:disabled { background: var(--soft-blue); color: var(--text-muted); }
+  .field select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B7280' d='M2 4l4 4 4-4z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+  .actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-bottom: 32px; }
+  button.primary, button.secondary { padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: 1px solid transparent; }
+  button.primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+  button.primary:hover { background: var(--navy-dark); }
+  button.secondary { background: transparent; color: var(--text-muted); border-color: var(--border); }
+  .hidden { display: none !important; }
 </style>
 <script>if (new URLSearchParams(location.search).get('embed') === '1') document.documentElement.classList.add('embedded');</script>
 <style>html.embedded header { display: none; } html.embedded main { padding-top: 16px; }</style>
@@ -64,99 +76,158 @@
 <header><div class="brand"><div class="brand-mark">M</div><div class="brand-text"><h1>Master Prime</h1><p>Simulador de Consórcio</p></div></div></header>
 <main>
   <h2 class="section-title">Consórcio como Investimento</h2>
-  <div class="subtitle">Compare estratégias de monetização do crédito do consórcio versus renda fixa</div>
 
-  <section class="card">
-    <div class="card-section-title">Consórcio<button type="button" class="reset-btn" id="resetConsorcio">Limpar</button></div>
-    <div class="group-card" style="margin-bottom: 16px;">
-      <div class="gc-title">Proposta</div>
-      <div class="grid grid-3">
-        <div class="field"><label>Crédito</label><input type="text" id="credito" placeholder="R$ 0,00" data-mask="money"></div>
-        <div class="field"><label>Prazo (meses)</label><input type="text" id="prazo" placeholder="0" data-mask="int"></div>
-        <div class="field"><label>% Taxa de administração</label><input type="text" id="taxaAdm" placeholder="0,00 %" data-mask="pct2"></div>
-        <div class="field"><label>% Fundo de reserva</label><input type="text" id="fundo" placeholder="0,00 %" data-mask="pct2"></div>
-        <div class="field"><label>% Reajuste</label><input type="text" id="reajuste" placeholder="0,00 %" data-mask="pct2"></div>
-        <div class="field"><label>Expectativa contemplação (meses)</label><input type="text" id="expectativa" value="1" data-mask="int"></div>
-      </div>
-    </div>
-    <div class="group-card">
-      <div class="gc-title">Lance e estratégia</div>
-      <div class="grid grid-3">
-        <div class="field"><label>% Lance recursos próprios</label><input type="text" id="lanceProprios" placeholder="0,0000 %" data-mask="pct4"></div>
-        <div class="field"><label>% Lance embutido</label><input type="text" id="lanceEmbutido" placeholder="0,0000 %" data-mask="pct4"></div>
-        <div class="field"><label>Estratégia</label>
-          <select id="estrategia">
-            <option value="venda">Venda da cota contemplada</option>
-            <option value="imoveis">Imóveis alugados</option>
-            <option value="diferenca">Diferença aluguel × parcela</option>
-            <option value="previdencia">Previdência exponencial</option>
-          </select>
-        </div>
-      </div>
-    </div>
-  </section>
+  <!-- ════ TABELA ════ -->
+  <div class="ops-table-wrapper">
+    <table class="ops-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Crédito Contratado</th>
+          <th>1ª Parcela</th>
+          <th>Mês Expect. Contempl.</th>
+          <th>Contemplação</th>
+          <th>Crédito Disponível</th>
+          <th>Valor Investido até Cont.</th>
+          <th>Valor Venda/Previdência</th>
+          <th>Lucro Bruto</th>
+          <th>% Retorno</th>
+          <th>Estratégia</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="opsBody"><tr class="empty-row"><td colspan="12">Nenhuma operação adicionada. Clique abaixo para começar.</td></tr></tbody>
+      <tbody><tr class="add-row"><td colspan="12"><button type="button" class="add-btn" id="btnAddOp">+ Adicionar Operação</button></td></tr></tbody>
+      <tfoot id="opsFoot" class="hidden">
+        <tr>
+          <td>TOTAL</td>
+          <td id="ft_credito">R$ 0,00</td>
+          <td id="ft_parcela">R$ 0,00</td>
+          <td></td>
+          <td></td>
+          <td id="ft_creditoDisp">R$ 0,00</td>
+          <td id="ft_invCont">R$ 0,00</td>
+          <td id="ft_vendaPrev">R$ 0,00</td>
+          <td id="ft_lucro">R$ 0,00</td>
+          <td id="ft_retorno">0,00 %</td>
+          <td></td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
 
-  <section class="card">
-    <div class="card-section-title">Dados econômicos</div>
-    <div class="grid grid-3">
-      <div class="field"><label>% Selic (a.a.)</label><input type="text" id="selic" value="15,00 %" data-mask="pct2"></div>
-      <div class="field"><label>% Rentabilidade do grupo</label><input type="text" id="rentGrupo" value="90,00 %" data-mask="pct2"></div>
-      <div class="field"><label>% Rentabilidade investimento</label><input type="text" id="rentInv" value="100,00 %" data-mask="pct2"></div>
-      <div class="field"><label>% Venda da carta (≤30 meses)</label><input type="text" id="vendaCurta" value="15,00 %" data-mask="pct2"></div>
-      <div class="field"><label>% Venda da carta (>30 meses)</label><input type="text" id="vendaLonga" value="20,00 %" data-mask="pct2"></div>
-      <div class="field"><label>% Valorização imobiliária (a.a.)</label><input type="text" id="valImob" value="6,39 %" data-mask="pct2"></div>
-      <div class="field"><label>% Aluguel mensal</label><input type="text" id="pctAluguel" value="0,65 %" data-mask="pct2"></div>
-      <div class="field"><label>% Rentabilidade aluguel</label><input type="text" id="rentAluguel" value="100,00 %" data-mask="pct2"></div>
+  <!-- ════ ESTRATÉGIAS ════ -->
+  <h3 style="font-size:13px; color:var(--navy); letter-spacing:1.5px; text-transform:uppercase; font-weight:700; margin-bottom:14px;">Estratégias possíveis</h3>
+  <div class="strategy-grid">
+    <div class="strategy-card">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><path d="M8 12l4-4 4 4M12 8v8"/></svg>
+      <div class="label">Venda da cota</div>
+      <div class="value" id="stVenda">R$ 0,00</div>
     </div>
-  </section>
+    <div class="strategy-card">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="9" width="18" height="12" rx="1"/><path d="M3 9l9-6 9 6"/></svg>
+      <div class="label">Imóveis alugados</div>
+      <div class="value" id="stImoveis">R$ 0,00</div>
+    </div>
+    <div class="strategy-card">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2v20M5 12h14"/></svg>
+      <div class="label">Diferença aluguel × parcela</div>
+      <div class="value" id="stDiferenca">R$ 0,00</div>
+    </div>
+    <div class="strategy-card">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2C7 2 4 6 4 11c0 5 3 9 8 11 5-2 8-6 8-11 0-5-3-9-8-9z"/></svg>
+      <div class="label">Previdência exponencial</div>
+      <div class="value" id="stPrevidencia">R$ 0,00</div>
+    </div>
+  </div>
+  <div class="strategy-card primary" style="margin-bottom:24px;">
+    <div class="label">Patrimônio total</div>
+    <div class="value" id="stPatrimonio">R$ 0,00</div>
+  </div>
 
-  <section class="card">
-    <div class="card-section-title">Estratégias possíveis</div>
-    <div class="strategy-grid">
-      <div class="strategy-card">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 8v8M8 12l4-4 4 4"/><circle cx="12" cy="12" r="10"/></svg>
-        <div class="label">Venda da cota</div>
-        <div class="value" id="stVenda">R$ 0,00</div>
-      </div>
-      <div class="strategy-card">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="9" width="18" height="12" rx="1"/><path d="M3 9l9-6 9 6M9 21v-6h6v6"/></svg>
-        <div class="label">Imóveis alugados</div>
-        <div class="value" id="stImoveis">R$ 0,00</div>
-      </div>
-      <div class="strategy-card">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2v20M5 12h14"/></svg>
-        <div class="label">Diferença aluguel × parcela</div>
-        <div class="value" id="stDiferenca">R$ 0,00</div>
-      </div>
-      <div class="strategy-card">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2C7 2 4 6 4 11c0 5 3 9 8 11 5-2 8-6 8-11 0-5-3-9-8-9z"/></svg>
-        <div class="label">Previdência exponencial</div>
-        <div class="value" id="stPrevidencia">R$ 0,00</div>
-      </div>
-    </div>
-    <div class="strategy-card primary" style="margin-top:6px;">
-      <div class="label">Patrimônio total</div>
-      <div class="value" id="stPatrimonio">R$ 0,00</div>
-    </div>
-  </section>
-
-  <section class="card">
-    <div class="card-section-title">Investimento equivalente em renda fixa</div>
-    <div class="grid grid-2">
-      <div class="result-row"><strong>Valor investido</strong><span class="value" id="rfValor">R$ 0,00</span></div>
-      <div class="result-row"><strong>% Do CDI</strong><span class="value" id="rfCdi">0,00 %</span></div>
-      <div class="result-row"><strong>Valor bruto acumulado</strong><span class="value" id="rfBruto">R$ 0,00</span></div>
-      <div class="result-row"><strong>I.R</strong><span class="value" id="rfIR">R$ 0,00</span></div>
-      <div class="result-primary"><strong>Rentabilidade líquida</strong><span class="value" id="rfLiquido">R$ 0,00</span></div>
-      <div class="result-primary"><strong>% Retorno consórcio vs renda fixa</strong><span class="value" id="rfRetorno">0,00 %</span></div>
-    </div>
-  </section>
+  <!-- ════ INVESTIMENTO EM RENDA FIXA ════ -->
+  <div class="ops-table-wrapper">
+    <table class="ops-table">
+      <thead>
+        <tr><th colspan="7">Investimento em Renda Fixa (equivalente)</th></tr>
+        <tr>
+          <th>#</th><th>% do CDI</th><th>Valor Investido</th><th>Prazo</th><th>Valor Bruto Acumulado</th><th>I.R</th><th>Rentabilidade Líquida</th>
+        </tr>
+      </thead>
+      <tbody id="rfBody"><tr class="empty-row"><td colspan="7">Adicione uma operação acima.</td></tr></tbody>
+      <tfoot id="rfFoot" class="hidden">
+        <tr>
+          <td>TOTAL</td><td>—</td><td id="rf_valor">R$ 0,00</td><td>—</td><td id="rf_bruto">R$ 0,00</td><td id="rf_ir">R$ 0,00</td><td id="rf_liquida">R$ 0,00</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
 
   <div class="actions">
     <button class="secondary" id="btnLimpar">Limpar tudo</button>
     <button class="primary" id="btnPdf">Baixar PDF</button>
   </div>
 </main>
+
+<!-- ════ MODAL ════ -->
+<div class="modal-overlay hidden" id="modalOp">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">Adicionar Operação</h2>
+      <button class="modal-close" id="btnCloseModal">×</button>
+    </div>
+
+    <div class="group-card">
+      <div class="gc-title">Proposta</div>
+      <div class="grid grid-3">
+        <div class="field"><label>Crédito</label><input type="text" id="credito" placeholder="R$ 0,00" data-mask="money"></div>
+        <div class="field"><label>Prazo (meses)</label><input type="text" id="prazo" placeholder="0" data-mask="int"></div>
+        <div class="field"><label>% Taxa adm</label><input type="text" id="taxaAdm" placeholder="0,00 %" data-mask="pct2"></div>
+        <div class="field"><label>% Fundo reserva</label><input type="text" id="fundo" placeholder="0,00 %" data-mask="pct2"></div>
+        <div class="field"><label>% Reajuste</label><input type="text" id="reajuste" placeholder="0,00 %" data-mask="pct2"></div>
+        <div class="field"><label>Expectativa (meses)</label><input type="text" id="expectativa" value="1" data-mask="int"></div>
+      </div>
+    </div>
+
+    <div class="group-card">
+      <div class="gc-title">Contemplação</div>
+      <div class="grid grid-3">
+        <div class="field"><label>Tipo</label>
+          <select id="tipoCont"><option value="sorteio">Sorteio</option><option value="lance-fixo">Lance Fixo</option><option value="lance-fid">Lance Fidelidade</option></select>
+        </div>
+        <div class="field"><label>% Lance rec. próprios</label><input type="text" id="lanceP" placeholder="0,00 %" data-mask="pct2"></div>
+        <div class="field"><label>% Lance embutido</label><input type="text" id="lanceE" placeholder="0,00 %" data-mask="pct2"></div>
+      </div>
+    </div>
+
+    <div class="group-card">
+      <div class="gc-title">Estratégia</div>
+      <div class="grid grid-3">
+        <div class="field"><label>Estratégia</label>
+          <select id="estrategia">
+            <option value="venda">Venda da cota</option>
+            <option value="imoveis">Imóveis alugados</option>
+            <option value="diferenca">Diferença aluguel × parcela</option>
+            <option value="previdencia">Previdência exponencial</option>
+          </select>
+        </div>
+        <div class="field"><label>% Selic (a.a.)</label><input type="text" id="selic" value="15,00 %" data-mask="pct2"></div>
+        <div class="field"><label>% Rentabilidade do grupo</label><input type="text" id="rentGrupo" value="90,00 %" data-mask="pct2"></div>
+        <div class="field"><label>% Rentabilidade investimento</label><input type="text" id="rentInv" value="100,00 %" data-mask="pct2"></div>
+        <div class="field"><label>% Venda da carta (≤30 m)</label><input type="text" id="vendaCurta" value="15,00 %" data-mask="pct2"></div>
+        <div class="field"><label>% Venda da carta (>30 m)</label><input type="text" id="vendaLonga" value="20,00 %" data-mask="pct2"></div>
+        <div class="field"><label>% Valorização imobiliária</label><input type="text" id="valImob" value="6,39 %" data-mask="pct2"></div>
+        <div class="field"><label>% Aluguel mensal</label><input type="text" id="pctAluguel" value="0,65 %" data-mask="pct2"></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="secondary" id="btnCancelOp">Cancelar</button>
+      <button class="primary" id="btnSaveOp">Adicionar</button>
+    </div>
+  </div>
+</div>
 
 <script>
 function maskMoney(v){const d=String(v).replace(/\D/g,'');if(!d)return'';const c=parseInt(d,10);return'R$ '+Math.floor(c/100).toLocaleString('pt-BR')+','+String(c%100).padStart(2,'0');}
@@ -167,106 +238,209 @@ function maskInt(v){return String(v).replace(/\D/g,'');}
 function fmtMoney(n){if(!isFinite(n)||isNaN(n))n=0;return'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function fmtPct(n,dec=2){if(!isFinite(n)||isNaN(n))n=0;return n.toFixed(dec).replace('.',',')+' %';}
 
-document.querySelectorAll('input[data-mask]').forEach(inp=>{
-  const t=inp.dataset.mask;
-  inp.addEventListener('input',e=>{if(t==='money')e.target.value=maskMoney(e.target.value);else if(t==='int')e.target.value=maskInt(e.target.value);recalc();});
-  inp.addEventListener('blur',e=>{if(t==='pct2')e.target.value=maskPct(e.target.value,2);else if(t==='pct4')e.target.value=maskPct(e.target.value,4);});
-  inp.addEventListener('focus',e=>{if(t==='pct2'||t==='pct4'){const n=unmaskPct(e.target.value);if(n)e.target.value=String(n).replace('.',',');}});
-});
-document.querySelectorAll('select').forEach(el=>el.addEventListener('change',recalc));
+let operacoes=[]; let editingId=null; let nextId=1;
 
-function recalc(){
-  const credito = unmaskMoney(document.getElementById('credito').value);
-  const prazo = parseInt(document.getElementById('prazo').value || '0', 10);
-  const taxaAdm = unmaskPct(document.getElementById('taxaAdm').value)/100;
-  const fundo = unmaskPct(document.getElementById('fundo').value)/100;
-  const reajuste = unmaskPct(document.getElementById('reajuste').value)/100;
-  const expectativa = parseInt(document.getElementById('expectativa').value || '1', 10);
-  const pP = unmaskPct(document.getElementById('lanceProprios').value)/100;
-  const pE = unmaskPct(document.getElementById('lanceEmbutido').value)/100;
-
-  const selic = unmaskPct(document.getElementById('selic').value)/100;
-  const rentGrupo = unmaskPct(document.getElementById('rentGrupo').value)/100;
-  const rentInv = unmaskPct(document.getElementById('rentInv').value)/100;
-  const vendaCurta = unmaskPct(document.getElementById('vendaCurta').value)/100;
-  const vendaLonga = unmaskPct(document.getElementById('vendaLonga').value)/100;
-  const valImob = unmaskPct(document.getElementById('valImob').value)/100;
-  const pctAluguel = unmaskPct(document.getElementById('pctAluguel').value)/100;
-  const rentAluguel = unmaskPct(document.getElementById('rentAluguel').value)/100;
-
-  const totalDevido = credito*(1+taxaAdm+fundo);
-  const parcelaBase = prazo > 0 ? totalDevido/prazo : 0;
-
-  let creditoAtualizado = credito;
-  if(reajuste > 0){const num = Math.floor(expectativa/12); creditoAtualizado = credito*Math.pow(1+reajuste, num);}
-  const lanceP = creditoAtualizado * pP;
-  const lanceE = creditoAtualizado * pE;
-  const creditoDisp = creditoAtualizado - lanceE;
-
-  const anos = prazo/12;
-  const cdi = selic * 0.9933;
-
-  // Estratégia VENDA DA COTA: ágio sobre crédito atualizado
-  const taxaVenda = expectativa <= 30 ? vendaCurta : vendaLonga;
-  const stVenda = creditoAtualizado * taxaVenda;
-
-  // IMÓVEIS ALUGADOS: compra um imóvel com o crédito disponível, aluga, ao final vende
-  const aluguelMensal = creditoDisp * pctAluguel;
-  let aluguelAcum = 0, alAtual = aluguelMensal;
-  for(let m=1; m<=prazo-expectativa; m++){
-    aluguelAcum += alAtual * rentAluguel;
-    if(m % 12 === 0) alAtual *= (1+valImob);
-  }
-  const stImoveis = creditoDisp * Math.pow(1+valImob, anos) + aluguelAcum;
-
-  // DIFERENÇA aluguel x parcela
-  let stDiferenca = 0, ag = aluguelMensal;
-  for(let m=1; m<=prazo; m++){
-    stDiferenca += (ag - parcelaBase);
-    if(m % 12 === 0) ag *= (1+valImob);
-  }
-
-  // PREVIDÊNCIA: capital investido a Selic composto durante prazo todo
-  const stPrevidencia = creditoDisp * Math.pow(1+selic*rentInv, anos);
-
-  // Patrimônio total = soma das estratégias (mas isso depende de qual estratégia escolheu)
-  const estrategia = document.getElementById('estrategia').value;
-  let patrimonio = creditoDisp;
-  if(estrategia === 'venda') patrimonio = creditoDisp + stVenda;
-  else if(estrategia === 'imoveis') patrimonio = stImoveis;
-  else if(estrategia === 'diferenca') patrimonio = creditoDisp + stDiferenca;
-  else if(estrategia === 'previdencia') patrimonio = stPrevidencia;
-
-  document.getElementById('stVenda').textContent = fmtMoney(stVenda);
-  document.getElementById('stImoveis').textContent = fmtMoney(stImoveis);
-  document.getElementById('stDiferenca').textContent = fmtMoney(stDiferenca);
-  document.getElementById('stPrevidencia').textContent = fmtMoney(stPrevidencia);
-  document.getElementById('stPatrimonio').textContent = fmtMoney(patrimonio);
-
-  // Renda fixa equivalente: investe lance + parcelas a CDI
-  const totalInvestido = lanceP + parcelaBase * prazo;
-  const valorBruto = totalInvestido * Math.pow(1+cdi*rentGrupo, anos);
-  const ganho = valorBruto - totalInvestido;
-  const ir = ganho * 0.15; // simplificado: 15% IR
-  const liquido = valorBruto - ir;
-  const retorno = totalInvestido > 0 ? ((patrimonio - liquido)/liquido)*100 : 0;
-
-  document.getElementById('rfValor').textContent = fmtMoney(totalInvestido);
-  document.getElementById('rfCdi').textContent = fmtPct(cdi*100, 2);
-  document.getElementById('rfBruto').textContent = fmtMoney(valorBruto);
-  document.getElementById('rfIR').textContent = fmtMoney(ir);
-  document.getElementById('rfLiquido').textContent = fmtMoney(liquido);
-  document.getElementById('rfRetorno').textContent = fmtPct(retorno, 2);
+function wireMasks(root){
+  root.querySelectorAll('input[data-mask]').forEach(inp=>{
+    if(inp.dataset.wired)return;
+    inp.dataset.wired='1';
+    const t=inp.dataset.mask;
+    inp.addEventListener('input',e=>{if(t==='money')e.target.value=maskMoney(e.target.value);else if(t==='int')e.target.value=maskInt(e.target.value);});
+    inp.addEventListener('blur',e=>{if(t==='pct2')e.target.value=maskPct(e.target.value,2);else if(t==='pct4')e.target.value=maskPct(e.target.value,4);});
+    inp.addEventListener('focus',e=>{if(t==='pct2'||t==='pct4'){const n=unmaskPct(e.target.value);if(n)e.target.value=String(n).replace('.',',');}});
+  });
 }
 
-document.getElementById('resetConsorcio').addEventListener('click',()=>{
-  ['credito','prazo','taxaAdm','fundo','reajuste','lanceProprios','lanceEmbutido'].forEach(id=>document.getElementById(id).value='');
+function calcularOperacao(op){
+  const credito=unmaskMoney(op.credito);
+  const prazo=parseInt(op.prazo||'0',10);
+  const taxaAdm=unmaskPct(op.taxaAdm)/100;
+  const fundo=unmaskPct(op.fundo)/100;
+  const reajuste=unmaskPct(op.reajuste)/100;
+  const expectativa=parseInt(op.expectativa||'1',10);
+  const pP=unmaskPct(op.lanceP)/100;
+  const pE=unmaskPct(op.lanceE)/100;
+  const selic=unmaskPct(op.selic)/100;
+  const rentGrupo=unmaskPct(op.rentGrupo)/100;
+  const rentInv=unmaskPct(op.rentInv)/100;
+  const vendaCurta=unmaskPct(op.vendaCurta)/100;
+  const vendaLonga=unmaskPct(op.vendaLonga)/100;
+  const valImob=unmaskPct(op.valImob)/100;
+  const pctAluguel=unmaskPct(op.pctAluguel)/100;
+
+  const totalDevido=credito*(1+taxaAdm+fundo);
+  const parcelaBase=prazo>0?totalDevido/prazo:0;
+  let creditoAtualizado=credito;
+  if(reajuste>0){const num=Math.floor(expectativa/12); creditoAtualizado=credito*Math.pow(1+reajuste,num);}
+  const lanceP=creditoAtualizado*pP, lanceE=creditoAtualizado*pE;
+  const creditoDisp=creditoAtualizado-lanceE;
+  const valorInvestidoAteCont=parcelaBase*expectativa+lanceP;
+
+  // Estratégias
+  const taxaVenda=expectativa<=30?vendaCurta:vendaLonga;
+  const stVenda=creditoAtualizado*taxaVenda;
+  const anos=prazo/12;
+  const aluguelMensal=creditoDisp*pctAluguel;
+  const stImoveis=creditoDisp*Math.pow(1+valImob,(prazo-expectativa)/12)+aluguelMensal*(prazo-expectativa);
+  let stDiferenca=0,ag=aluguelMensal;
+  for(let m=1;m<=prazo;m++){stDiferenca+=(ag-parcelaBase); if(m%12===0) ag*=(1+valImob);}
+  const stPrevidencia=creditoDisp*Math.pow(1+selic*rentInv,anos);
+
+  let valorVendaPrev=0, lucroBruto=0;
+  switch(op.estrategia){
+    case 'venda': valorVendaPrev=creditoAtualizado+stVenda; lucroBruto=stVenda-valorInvestidoAteCont; break;
+    case 'imoveis': valorVendaPrev=stImoveis; lucroBruto=stImoveis-valorInvestidoAteCont-parcelaBase*(prazo-expectativa); break;
+    case 'diferenca': valorVendaPrev=stDiferenca; lucroBruto=stDiferenca; break;
+    case 'previdencia': valorVendaPrev=stPrevidencia; lucroBruto=stPrevidencia-valorInvestidoAteCont; break;
+  }
+  const retorno=valorInvestidoAteCont>0?(lucroBruto/valorInvestidoAteCont)*100:0;
+
+  // Renda fixa equivalente
+  const cdi=selic*0.9933;
+  const taxaRf=cdi*rentGrupo;
+  const valorBrutoRf=valorInvestidoAteCont*Math.pow(1+taxaRf,expectativa/12);
+  const ganho=valorBrutoRf-valorInvestidoAteCont;
+  const ir=ganho*0.15;
+  const rfLiquido=valorBrutoRf-ir;
+
+  return {
+    credito, parcelaBase, expectativa, contemplacao: op.tipoCont, creditoDisp, valorInvestidoAteCont, valorVendaPrev,
+    lucroBruto, retorno, estrategia: op.estrategia,
+    stVenda, stImoveis, stDiferenca, stPrevidencia,
+    rfValor: valorInvestidoAteCont, rfCdi: cdi*100, rfBruto: valorBrutoRf, rfIR: ir, rfLiquido
+  };
+}
+
+function snapshotForm(){
+  return {
+    credito: document.getElementById('credito').value,
+    prazo: document.getElementById('prazo').value,
+    taxaAdm: document.getElementById('taxaAdm').value,
+    fundo: document.getElementById('fundo').value,
+    reajuste: document.getElementById('reajuste').value,
+    expectativa: document.getElementById('expectativa').value,
+    tipoCont: document.getElementById('tipoCont').value,
+    lanceP: document.getElementById('lanceP').value,
+    lanceE: document.getElementById('lanceE').value,
+    estrategia: document.getElementById('estrategia').value,
+    selic: document.getElementById('selic').value,
+    rentGrupo: document.getElementById('rentGrupo').value,
+    rentInv: document.getElementById('rentInv').value,
+    vendaCurta: document.getElementById('vendaCurta').value,
+    vendaLonga: document.getElementById('vendaLonga').value,
+    valImob: document.getElementById('valImob').value,
+    pctAluguel: document.getElementById('pctAluguel').value,
+  };
+}
+
+function loadIntoForm(op){
+  Object.entries(op).forEach(([k,v])=>{const el=document.getElementById(k); if(el && k!=='id') el.value=v;});
+}
+
+function clearForm(){
+  ['credito','prazo','taxaAdm','fundo','reajuste','lanceP','lanceE'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('expectativa').value='1';
-  recalc();
+  document.getElementById('tipoCont').value='sorteio';
+  document.getElementById('estrategia').value='venda';
+}
+
+const ESTRATEGIA_LABEL={venda:'VENDA',imoveis:'IMÓVEIS',diferenca:'DIFERENÇA',previdencia:'PREVIDÊNCIA'};
+const CONT_LABEL={sorteio:'SORTEIO','lance-fixo':'LANCE FIXO','lance-fid':'LANCE FIDELIDADE'};
+
+function renderOps(){
+  const tbody=document.getElementById('opsBody');
+  const tfoot=document.getElementById('opsFoot');
+  const rfBody=document.getElementById('rfBody');
+  const rfFoot=document.getElementById('rfFoot');
+  if(operacoes.length===0){
+    tbody.innerHTML='<tr class="empty-row"><td colspan="12">Nenhuma operação adicionada. Clique abaixo para começar.</td></tr>';
+    rfBody.innerHTML='<tr class="empty-row"><td colspan="7">Adicione uma operação acima.</td></tr>';
+    tfoot.classList.add('hidden'); rfFoot.classList.add('hidden');
+    ['stVenda','stImoveis','stDiferenca','stPrevidencia','stPatrimonio'].forEach(id=>document.getElementById(id).textContent='R$ 0,00');
+    return;
+  }
+  const calcs=operacoes.map(op=>({...calcularOperacao(op), id: op.id, _op: op}));
+  tbody.innerHTML=calcs.map((c,i)=>`<tr data-id="${c.id}">
+    <td>${i+1}</td>
+    <td>${fmtMoney(c.credito)}</td>
+    <td>${fmtMoney(c.parcelaBase)}</td>
+    <td>${c.expectativa}/${c._op.prazo}</td>
+    <td>${CONT_LABEL[c.contemplacao]||'-'}</td>
+    <td>${fmtMoney(c.creditoDisp)}</td>
+    <td>${fmtMoney(c.valorInvestidoAteCont)}</td>
+    <td>${fmtMoney(c.valorVendaPrev)}</td>
+    <td>${fmtMoney(c.lucroBruto)}</td>
+    <td>${fmtPct(c.retorno,2)}</td>
+    <td>${ESTRATEGIA_LABEL[c.estrategia]}</td>
+    <td><div class="row-actions"><button data-action="edit" data-id="${c.id}">Editar</button><button data-action="del" data-id="${c.id}">Excluir</button></div></td>
+  </tr>`).join('');
+
+  // Totals
+  const sum=k=>calcs.reduce((a,c)=>a+(c[k]||0),0);
+  document.getElementById('ft_credito').textContent=fmtMoney(sum('credito'));
+  document.getElementById('ft_parcela').textContent=fmtMoney(sum('parcelaBase'));
+  document.getElementById('ft_creditoDisp').textContent=fmtMoney(sum('creditoDisp'));
+  document.getElementById('ft_invCont').textContent=fmtMoney(sum('valorInvestidoAteCont'));
+  document.getElementById('ft_vendaPrev').textContent=fmtMoney(sum('valorVendaPrev'));
+  document.getElementById('ft_lucro').textContent=fmtMoney(sum('lucroBruto'));
+  const totalInv=sum('valorInvestidoAteCont');
+  document.getElementById('ft_retorno').textContent=fmtPct(totalInv>0?(sum('lucroBruto')/totalInv)*100:0,2);
+  tfoot.classList.remove('hidden');
+
+  // Estratégias agregadas
+  document.getElementById('stVenda').textContent=fmtMoney(sum('stVenda'));
+  document.getElementById('stImoveis').textContent=fmtMoney(sum('stImoveis'));
+  document.getElementById('stDiferenca').textContent=fmtMoney(sum('stDiferenca'));
+  document.getElementById('stPrevidencia').textContent=fmtMoney(sum('stPrevidencia'));
+  document.getElementById('stPatrimonio').textContent=fmtMoney(sum('valorVendaPrev'));
+
+  // Renda fixa
+  rfBody.innerHTML=calcs.map((c,i)=>`<tr>
+    <td>${i+1}</td>
+    <td>${fmtPct(c.rfCdi,2)}</td>
+    <td>${fmtMoney(c.rfValor)}</td>
+    <td>${c.expectativa}</td>
+    <td>${fmtMoney(c.rfBruto)}</td>
+    <td>${fmtMoney(c.rfIR)}</td>
+    <td>${fmtMoney(c.rfLiquido)}</td>
+  </tr>`).join('');
+  document.getElementById('rf_valor').textContent=fmtMoney(sum('rfValor'));
+  document.getElementById('rf_bruto').textContent=fmtMoney(sum('rfBruto'));
+  document.getElementById('rf_ir').textContent=fmtMoney(sum('rfIR'));
+  document.getElementById('rf_liquida').textContent=fmtMoney(sum('rfLiquido'));
+  rfFoot.classList.remove('hidden');
+}
+
+function openModal(opForEdit=null){
+  const m=document.getElementById('modalOp');
+  m.classList.remove('hidden');
+  wireMasks(m);
+  if(opForEdit){editingId=opForEdit.id; document.getElementById('modalTitle').textContent='Editar Operação'; document.getElementById('btnSaveOp').textContent='Salvar'; loadIntoForm(opForEdit);}
+  else{editingId=null; document.getElementById('modalTitle').textContent='Adicionar Operação'; document.getElementById('btnSaveOp').textContent='Adicionar'; clearForm();}
+}
+function closeModal(){document.getElementById('modalOp').classList.add('hidden');}
+
+document.getElementById('btnAddOp').addEventListener('click',()=>openModal(null));
+document.getElementById('btnCancelOp').addEventListener('click',closeModal);
+document.getElementById('btnCloseModal').addEventListener('click',closeModal);
+document.getElementById('btnSaveOp').addEventListener('click',()=>{
+  const data=snapshotForm();
+  if(!unmaskMoney(data.credito)){alert('Informe o Crédito');return;}
+  if(editingId){operacoes=operacoes.map(o=>o.id===editingId?{...o,...data,id:editingId}:o);}
+  else{operacoes.push({id:nextId++,...data});}
+  closeModal(); renderOps();
 });
-document.getElementById('btnLimpar').addEventListener('click',()=>document.getElementById('resetConsorcio').click());
+document.getElementById('opsBody').addEventListener('click',e=>{
+  const btn=e.target.closest('button[data-action]');
+  if(!btn)return;
+  const id=parseInt(btn.dataset.id,10);
+  const op=operacoes.find(o=>o.id===id);
+  if(btn.dataset.action==='edit') openModal(op);
+  else if(btn.dataset.action==='del'){if(confirm('Excluir?')){operacoes=operacoes.filter(o=>o.id!==id); renderOps();}}
+});
+document.getElementById('btnLimpar').addEventListener('click',()=>{if(operacoes.length && !confirm('Limpar tudo?'))return; operacoes=[]; renderOps();});
 document.getElementById('btnPdf').addEventListener('click',()=>alert('PDF do Consórcio como Investimento será implementado depois.'));
-recalc();
+renderOps();
 </script>
 </body>
 </html>

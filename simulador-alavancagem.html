@@ -6,51 +6,50 @@
 <title>Master Prime - Alavancagem Patrimonial</title>
 <style>
   :root { --navy:#2D3F5E; --navy-dark:#1E2D45; --bg:#F4F5F7; --card:#FFFFFF; --border:#E5E7EB; --text:#1F2937; --text-muted:#6B7280; --soft-blue:#F1F5F9; --green:#10B981; --green-soft:#D1FAE5; }
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'Inter',-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;}
-  header{background:var(--navy);color:#fff;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;}
-  .brand{display:flex;align-items:center;gap:14px;}
-  .brand-mark{width:36px;height:36px;background:var(--navy-dark);border:1px solid rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;}
-  .brand-text h1{font-size:16px;font-weight:600;}
-  .brand-text p{font-size:11px;color:rgba(255,255,255,0.7);letter-spacing:1.2px;text-transform:uppercase;margin-top:2px;}
-  main{max-width:1280px;margin:0 auto;padding:32px;}
-  h2.section-title{font-size:22px;font-weight:600;color:var(--navy);margin-bottom:4px;text-align:center;}
-  .subtitle{font-size:12px;color:var(--text-muted);text-align:center;margin-bottom:24px;letter-spacing:1px;text-transform:uppercase;}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px;}
-  .card-section-title{font-size:13px;font-weight:700;color:var(--navy);letter-spacing:1.5px;text-transform:uppercase;padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:18px;display:flex;align-items:center;gap:10px;}
-  .card-section-title .reset-btn{margin-left:auto;background:none;border:1px solid var(--border);color:var(--text-muted);cursor:pointer;padding:4px 10px;border-radius:4px;font-size:11px;}
-  .group-card{background:var(--soft-blue);border:1px solid var(--border);border-radius:10px;padding:18px;}
-  .group-card .gc-title{font-size:12px;font-weight:600;color:var(--navy);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;}
-  .grid{display:grid;gap:14px;}
-  .grid-2{grid-template-columns:repeat(2,1fr);}
-  .grid-3{grid-template-columns:repeat(3,1fr);}
-  .grid-4{grid-template-columns:repeat(4,1fr);}
-  @media (max-width:768px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
-  .field{position:relative;}
-  .field label{position:absolute;top:-7px;left:12px;background:var(--card);padding:0 6px;font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;font-weight:500;z-index:1;}
-  .group-card .field label{background:var(--soft-blue);}
-  .field input,.field select{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:#fff;color:var(--text);}
-  .field input:focus,.field select:focus{outline:none;border-color:var(--navy);}
-  .field input:disabled,.field select:disabled{background:var(--soft-blue);color:var(--text-muted);}
-  .field select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B7280' d='M2 4l4 4 4-4z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
-  .toggle-input{position:relative;display:inline-block;width:32px;height:18px;}
-  .toggle-input input{opacity:0;width:0;height:0;}
-  .toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#D1D5DB;border-radius:18px;}
-  .toggle-slider::before{position:absolute;content:"";height:14px;width:14px;left:2px;top:2px;background:white;border-radius:50%;transition:.2s;}
-  .toggle-input input:checked+.toggle-slider{background:var(--navy);}
-  .toggle-input input:checked+.toggle-slider::before{transform:translateX(14px);}
-  .result-row{background:var(--soft-blue);border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;}
-  .result-row strong{font-size:12px;color:var(--navy);letter-spacing:1px;text-transform:uppercase;font-weight:500;}
-  .result-row .value{font-size:18px;font-weight:600;color:var(--navy);}
-  .result-primary{background:var(--navy);color:white;padding:14px 20px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;}
-  .result-primary strong{color:rgba(255,255,255,0.7);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;font-weight:500;}
-  .result-primary .value{font-size:22px;font-weight:700;color:#fff;}
-  .actions{display:flex;justify-content:flex-end;gap:12px;margin-top:24px;padding-bottom:32px;}
-  button.primary,button.secondary{padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid transparent;}
-  button.primary{background:var(--navy);color:#fff;border-color:var(--navy);}
-  button.primary:hover{background:var(--navy-dark);}
-  button.secondary{background:transparent;color:var(--text-muted);border-color:var(--border);}
-  button.secondary:hover{background:var(--bg);}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; }
+  header { background: var(--navy); color: #fff; padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .brand-mark { width: 36px; height: 36px; background: var(--navy-dark); border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 14px; }
+  .brand-text h1 { font-size: 16px; font-weight: 600; }
+  .brand-text p { font-size: 11px; color: rgba(255,255,255,0.7); letter-spacing: 1.2px; text-transform: uppercase; margin-top: 2px; }
+  main { max-width: 1280px; margin: 0 auto; padding: 32px; }
+  h2.section-title { font-size: 22px; font-weight: 600; color: var(--navy); margin-bottom: 24px; text-align: center; letter-spacing: 0.5px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+  .card-section-title { font-size: 13px; font-weight: 700; color: var(--navy); letter-spacing: 1.5px; text-transform: uppercase; padding-bottom: 14px; border-bottom: 1px solid var(--border); margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
+  .card-section-title .reset-btn { margin-left: auto; background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; padding: 4px 10px; border-radius: 4px; font-size: 11px; }
+  .group-card { background: var(--soft-blue); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+  .group-card .gc-title { font-size: 12px; font-weight: 600; color: var(--navy); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
+  .grid { display: grid; gap: 14px; }
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 768px) { .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } }
+  .field { position: relative; }
+  .field label { position: absolute; top: -7px; left: 12px; background: var(--card); padding: 0 6px; font-size: 11px; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; font-weight: 500; z-index: 1; }
+  .group-card .field label { background: var(--soft-blue); }
+  .field input, .field select { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; background: #fff; color: var(--text); }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--navy); }
+  .field input:disabled { background: var(--soft-blue); color: var(--text-muted); }
+  .field select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B7280' d='M2 4l4 4 4-4z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+  .toggle-input { position: relative; display: inline-block; width: 32px; height: 18px; }
+  .toggle-input input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #D1D5DB; border-radius: 18px; }
+  .toggle-slider::before { position: absolute; content: ""; height: 14px; width: 14px; left: 2px; top: 2px; background: white; border-radius: 50%; transition: 0.2s; }
+  .toggle-input input:checked + .toggle-slider { background: var(--navy); }
+  .toggle-input input:checked + .toggle-slider::before { transform: translateX(14px); }
+  .result-row { background: var(--soft-blue); border-radius: 8px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+  .result-row strong { font-size: 12px; color: var(--navy); letter-spacing: 1px; text-transform: uppercase; font-weight: 500; }
+  .result-row .value { font-size: 18px; font-weight: 600; color: var(--navy); }
+  .result-primary { background: var(--navy); color: white; padding: 14px 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .result-primary strong { color: rgba(255,255,255,0.7); font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 500; }
+  .result-primary .value { font-size: 22px; font-weight: 700; color: #fff; }
+  .actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-bottom: 32px; }
+  button.primary, button.secondary { padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: 1px solid transparent; }
+  button.primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+  button.primary:hover { background: var(--navy-dark); }
+  button.secondary { background: transparent; color: var(--text-muted); border-color: var(--border); }
+  button.secondary:hover { background: var(--bg); }
 </style>
 <script>if (new URLSearchParams(location.search).get('embed') === '1') document.documentElement.classList.add('embedded');</script>
 <style>html.embedded header { display: none; } html.embedded main { padding-top: 16px; }</style>
@@ -59,24 +58,35 @@
 <header><div class="brand"><div class="brand-mark">M</div><div class="brand-text"><h1>Master Prime</h1><p>Simulador de Consórcio</p></div></div></header>
 <main>
   <h2 class="section-title">Alavancagem Patrimonial</h2>
-  <div class="subtitle">Veja como o consórcio aumenta seu poder de compra de imóveis</div>
 
+  <!-- ════ CONSÓRCIO ════ -->
   <section class="card">
     <div class="card-section-title">Consórcio<button type="button" class="reset-btn" id="resetConsorcio">Limpar</button></div>
-    <div class="group-card">
+    <div class="group-card" style="margin-bottom: 16px;">
       <div class="gc-title">Proposta</div>
       <div class="grid grid-3">
         <div class="field"><label>Crédito</label><input type="text" id="credito" placeholder="R$ 0,00" data-mask="money"></div>
         <div class="field"><label>Prazo (meses)</label><input type="text" id="prazo" placeholder="0" data-mask="int"></div>
         <div class="field"><label>% Taxa de administração</label><input type="text" id="taxaAdm" placeholder="0,00 %" data-mask="pct2"></div>
         <div class="field"><label>% Fundo de reserva</label><input type="text" id="fundo" placeholder="0,00 %" data-mask="pct2"></div>
+        <div class="field"><label>Tipo de reajuste</label>
+          <select id="tipoReajuste"><option value="">Selecione</option><option value="cota-mensal">Cota - Mensal</option><option value="cota-semestral">Cota - Semestral</option><option value="cota-anual">Cota - Anual</option></select>
+        </div>
         <div class="field"><label>% Reajuste</label><input type="text" id="reajuste" placeholder="0,00 %" data-mask="pct2"></div>
-        <div class="field"><label>Expectativa contemplação (meses)</label><input type="text" id="expectativa" value="1" data-mask="int"></div>
       </div>
-      <div style="margin-top:16px;"><div class="result-primary"><strong>Parcela mensal</strong><span class="value" id="parcelaMensal">R$ 0,00</span></div></div>
+      <div style="margin-top: 16px;"><div class="result-primary"><strong>Parcela inicial</strong><span class="value" id="parcelaInicial">R$ 0,00</span></div></div>
+    </div>
+    <div class="group-card">
+      <div class="gc-title">Contemplação</div>
+      <div class="grid grid-3">
+        <div class="field"><label>Tipo de contemplação</label><select id="tipoCont"><option value="sorteio">Sorteio</option><option value="lance">Lance</option></select></div>
+        <div class="field"><label>Expectativa (meses)</label><input type="text" id="expectativa" value="1" data-mask="int"></div>
+        <div class="field"><label>% Lance rec. próprios</label><input type="text" id="lanceP" placeholder="0,0000 %" data-mask="pct4" disabled></div>
+      </div>
     </div>
   </section>
 
+  <!-- ════ IMÓVEL ════ -->
   <section class="card">
     <div class="card-section-title">Imóvel<button type="button" class="reset-btn" id="resetImovel">Limpar</button></div>
     <div class="grid grid-2">
@@ -85,27 +95,63 @@
         <div class="grid grid-2">
           <div class="field"><label>Valor de mercado</label><input type="text" id="imValor" placeholder="R$ 0,00" data-mask="money"></div>
           <div class="field"><label>Valor de compra</label><input type="text" id="imCompra" placeholder="R$ 0,00" data-mask="money"></div>
+          <div class="field"><label>% Desconto compra</label><input type="text" id="imDesconto" placeholder="0,00 %" disabled></div>
           <div class="field"><label>% Valorização anual</label><input type="text" id="imValorizacao" value="6,39 %" data-mask="pct2"></div>
         </div>
       </div>
       <div class="group-card">
-        <div class="gc-title">Aluguel</div>
+        <div class="gc-title">Forma de Pagamento</div>
         <div class="grid grid-2">
-          <div class="field"><label>Prestação do aluguel</label><input type="text" id="alPrestacao" placeholder="R$ 0,00" data-mask="money"></div>
-          <div class="field"><label>% Correção anual</label><input type="text" id="alCorrecao" value="5,32 %" data-mask="pct2"></div>
+          <div class="field"><label>Tipo</label>
+            <select id="fpTipo"><option value="financiamento">Financiamento</option><option value="avista">À vista</option></select>
+          </div>
+          <div class="field"><label>Entrada</label><input type="text" id="fpEntrada" placeholder="R$ 0,00" data-mask="money"></div>
+          <div class="field"><label>% Entrada</label><input type="text" id="fpEntradaPct" placeholder="0 %" disabled></div>
+          <div class="field"><label>Total parcelas pagas</label><input type="text" id="fpTotalParc" placeholder="R$ 0,00" disabled></div>
+          <div class="field"><label>Saldo devedor</label><input type="text" id="fpSaldo" placeholder="R$ 0,00" disabled></div>
+          <div class="field"><label>Total</label><input type="text" id="fpTotal" placeholder="R$ 0,00" disabled></div>
         </div>
       </div>
     </div>
   </section>
 
+  <!-- ════ ALUGUEL ════ -->
+  <section class="card">
+    <div class="card-section-title">Aluguel</div>
+    <div class="grid grid-2">
+      <div class="group-card">
+        <div class="gc-title">Configuração</div>
+        <div class="grid grid-2">
+          <div class="field"><label>Prestação do aluguel</label><input type="text" id="alPrestacao" placeholder="R$ 0,00" data-mask="money"></div>
+          <div class="field"><label>% Aluguel</label><input type="text" id="alPct" placeholder="0,00 %" disabled></div>
+          <div class="field"><label>% Correção anual</label><input type="text" id="alCorrecao" value="5,32 %" data-mask="pct2"></div>
+          <div class="field"><label>Diferença aluguel × parcela (média)</label><input type="text" id="alDiferenca" placeholder="R$ 0,00" disabled></div>
+        </div>
+      </div>
+      <div class="group-card">
+        <div class="gc-title">Investimento da diferença</div>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+          <span class="toggle-input"><input type="checkbox" id="invOn"><span class="toggle-slider"></span></span>
+          <span style="font-size:13px; color:var(--text-muted);">Investir a diferença mensal</span>
+        </div>
+        <div class="grid grid-2">
+          <div class="field"><label>% Selic (a.a.)</label><input type="text" id="invSelic" value="15,00 %" data-mask="pct2" disabled></div>
+          <div class="field"><label>% Rentabilidade CDI</label><input type="text" id="invRent" value="100,00 %" data-mask="pct2" disabled></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ RESULTADO ALAVANCAGEM ════ -->
   <section class="card">
     <div class="card-section-title">Resultado da Alavancagem</div>
     <div class="grid grid-2">
       <div class="result-row"><strong>Valor alavancado do imóvel</strong><span class="value" id="resAlavancado">R$ 0,00</span></div>
       <div class="result-row"><strong>Valorização do imóvel</strong><span class="value" id="resValorizacao">R$ 0,00</span></div>
       <div class="result-row"><strong>Diferença aluguel × parcela (período)</strong><span class="value" id="resDiferenca">R$ 0,00</span></div>
-      <div class="result-primary"><strong>Patrimônio total</strong><span class="value" id="resPatrimonio">R$ 0,00</span></div>
+      <div class="result-row"><strong>Investimento da diferença</strong><span class="value" id="resInvest">R$ 0,00</span></div>
     </div>
+    <div style="margin-top:14px;"><div class="result-primary"><strong>Patrimônio total</strong><span class="value" id="resPatrimonio">R$ 0,00</span></div></div>
   </section>
 
   <div class="actions">
@@ -121,57 +167,125 @@ function maskPct(v,dec=2){const c=String(v).replace(',','.').replace(/[^\d.]/g,'
 function unmaskPct(v){return parseFloat(String(v).replace('%','').replace(',','.').replace(/[^\d.\-]/g,'').trim()||'0');}
 function maskInt(v){return String(v).replace(/\D/g,'');}
 function fmtMoney(n){if(!isFinite(n)||isNaN(n))n=0;return'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtPct(n,dec=2){if(!isFinite(n)||isNaN(n))n=0;return n.toFixed(dec).replace('.',',')+' %';}
 
 document.querySelectorAll('input[data-mask]').forEach(inp=>{
   const t=inp.dataset.mask;
   inp.addEventListener('input',e=>{if(t==='money')e.target.value=maskMoney(e.target.value);else if(t==='int')e.target.value=maskInt(e.target.value);recalc();});
-  inp.addEventListener('blur',e=>{if(t==='pct2')e.target.value=maskPct(e.target.value,2);});
-  inp.addEventListener('focus',e=>{if(t==='pct2'){const n=unmaskPct(e.target.value);if(n)e.target.value=String(n).replace('.',',');}});
+  inp.addEventListener('blur',e=>{if(t==='pct2')e.target.value=maskPct(e.target.value,2);else if(t==='pct4')e.target.value=maskPct(e.target.value,4);});
+  inp.addEventListener('focus',e=>{if(t==='pct2'||t==='pct4'){const n=unmaskPct(e.target.value);if(n)e.target.value=String(n).replace('.',',');}});
+});
+document.querySelectorAll('select, input[type="checkbox"]').forEach(el=>el.addEventListener('change',recalc));
+
+document.getElementById('tipoCont').addEventListener('change',e=>{
+  const isLance=e.target.value==='lance';
+  document.getElementById('lanceP').disabled=!isLance;
+  if(!isLance) document.getElementById('lanceP').value='';
+  recalc();
+});
+document.getElementById('invOn').addEventListener('change',e=>{
+  document.getElementById('invSelic').disabled=!e.target.checked;
+  document.getElementById('invRent').disabled=!e.target.checked;
+  recalc();
 });
 
 function recalc(){
-  const credito = unmaskMoney(document.getElementById('credito').value);
-  const prazo = parseInt(document.getElementById('prazo').value || '0', 10);
-  const taxaAdm = unmaskPct(document.getElementById('taxaAdm').value)/100;
-  const fundo = unmaskPct(document.getElementById('fundo').value)/100;
-  const reajuste = unmaskPct(document.getElementById('reajuste').value)/100;
-  const expectativa = parseInt(document.getElementById('expectativa').value || '1', 10);
+  const credito=unmaskMoney(document.getElementById('credito').value);
+  const prazo=parseInt(document.getElementById('prazo').value||'0',10);
+  const taxaAdm=unmaskPct(document.getElementById('taxaAdm').value)/100;
+  const fundo=unmaskPct(document.getElementById('fundo').value)/100;
+  const tipoReajuste=document.getElementById('tipoReajuste').value;
+  const reajuste=unmaskPct(document.getElementById('reajuste').value)/100;
+  const expectativa=parseInt(document.getElementById('expectativa').value||'1',10);
+  const tipoCont=document.getElementById('tipoCont').value;
+  const pP=tipoCont==='lance'?unmaskPct(document.getElementById('lanceP').value)/100:0;
 
-  const totalDevido = credito*(1+taxaAdm+fundo);
-  const parcelaMensal = prazo > 0 ? totalDevido/prazo : 0;
-  document.getElementById('parcelaMensal').textContent = fmtMoney(parcelaMensal);
+  const totalDevido=credito*(1+taxaAdm+fundo);
+  const parcelaBase=prazo>0?totalDevido/prazo:0;
+  document.getElementById('parcelaInicial').textContent=fmtMoney(parcelaBase);
 
-  const imValor = unmaskMoney(document.getElementById('imValor').value);
-  const imCompra = unmaskMoney(document.getElementById('imCompra').value);
-  const imValorizacao = unmaskPct(document.getElementById('imValorizacao').value)/100;
-  const alPrestacao = unmaskMoney(document.getElementById('alPrestacao').value);
-  const alCorrecao = unmaskPct(document.getElementById('alCorrecao').value)/100;
+  let creditoAtualizado=credito;
+  if(reajuste>0 && tipoReajuste){const period=tipoReajuste.endsWith('-anual')?12:tipoReajuste.endsWith('-semestral')?6:1; const num=Math.floor(expectativa/period); creditoAtualizado=credito*Math.pow(1+reajuste,num);}
 
-  const anos = prazo/12;
-  // Alavancagem: comparar o que poderia comprar à vista (com a parcela poupada) vs o que tem com consórcio (imóvel inteiro)
-  const valorAlavancado = Math.max(0, credito - imCompra); // valor que o consórcio "cobre" além do disponível
-  const valorizacaoFinal = imValor * (Math.pow(1+imValorizacao, anos) - 1);
-  // Diferença aluguel × parcela acumulada no período
-  let diferencaAcumulada = 0, alAtual = alPrestacao;
-  for(let m=1; m<=prazo; m++){
-    diferencaAcumulada += (alAtual - parcelaMensal);
-    if(m % 12 === 0) alAtual *= (1+alCorrecao);
+  // Imóvel
+  const imValor=unmaskMoney(document.getElementById('imValor').value);
+  const imCompra=unmaskMoney(document.getElementById('imCompra').value);
+  const imValorizacao=unmaskPct(document.getElementById('imValorizacao').value)/100;
+  const imDescontoPct=imValor>0?((imValor-imCompra)/imValor)*100:0;
+  document.getElementById('imDesconto').value=fmtPct(imDescontoPct,2);
+
+  // Forma de pagamento
+  const fpTipo=document.getElementById('fpTipo').value;
+  const fpEntrada=unmaskMoney(document.getElementById('fpEntrada').value);
+  const fpEntradaPct=imCompra>0?(fpEntrada/imCompra)*100:0;
+  document.getElementById('fpEntradaPct').value=fmtPct(fpEntradaPct,2);
+  const fpFinanciado=Math.max(0,imCompra-fpEntrada);
+  // Simplificação: se for financiamento usa SAC com juros 12.99%
+  const finJuros=0.1299;
+  const finPrazo=420;
+  const iMensal=Math.pow(1+finJuros,1/12)-1;
+  let fpTotalParc=0,fpSaldoFinal=0;
+  if(fpTipo==='financiamento' && fpFinanciado>0){
+    const amort=fpFinanciado/finPrazo;
+    const meses=Math.min(prazo,finPrazo); // só calcula até o prazo do consórcio
+    let saldo=fpFinanciado;
+    for(let m=1;m<=meses;m++){
+      fpTotalParc+=amort+saldo*iMensal;
+      saldo-=amort;
+    }
+    fpSaldoFinal=saldo;
   }
-  const patrimonio = imValor * Math.pow(1+imValorizacao, anos) + diferencaAcumulada;
+  document.getElementById('fpTotalParc').value=fmtMoney(fpTotalParc);
+  document.getElementById('fpSaldo').value=fmtMoney(fpSaldoFinal);
+  document.getElementById('fpTotal').value=fmtMoney(fpEntrada+fpTotalParc+fpSaldoFinal);
 
-  document.getElementById('resAlavancado').textContent = fmtMoney(valorAlavancado);
-  document.getElementById('resValorizacao').textContent = fmtMoney(valorizacaoFinal);
-  document.getElementById('resDiferenca').textContent = fmtMoney(diferencaAcumulada);
-  document.getElementById('resPatrimonio').textContent = fmtMoney(patrimonio);
+  // Aluguel
+  const alPrestacao=unmaskMoney(document.getElementById('alPrestacao').value);
+  const alCorrecao=unmaskPct(document.getElementById('alCorrecao').value)/100;
+  const alPct=imCompra>0?(alPrestacao/imCompra)*100:0;
+  document.getElementById('alPct').value=fmtPct(alPct,2);
+  // Aluguel acumulado durante o prazo do consórcio (com correção anual)
+  let alguelAcum=0,alAtual=alPrestacao,parcelaAcum=0,parcelaAtual=parcelaBase;
+  let diferencaAcum=0,diferencaInvestida=0;
+  const invOn=document.getElementById('invOn').checked;
+  const invSelic=invOn?unmaskPct(document.getElementById('invSelic').value)/100:0;
+  const invRent=invOn?unmaskPct(document.getElementById('invRent').value)/100:0;
+  const invTaxa=invSelic*invRent*0.9933;
+  const invMensal=Math.pow(1+invTaxa,1/12)-1;
+  for(let m=1;m<=prazo;m++){
+    alguelAcum+=alAtual;
+    parcelaAcum+=parcelaAtual;
+    const diff=alAtual-parcelaAtual;
+    diferencaAcum+=diff;
+    if(invOn) diferencaInvestida=diferencaInvestida*(1+invMensal)+Math.max(0,diff);
+    if(m%12===0){alAtual*=(1+alCorrecao); if(reajuste>0 && tipoReajuste) parcelaAtual*=(1+reajuste);}
+  }
+  const diferencaMedia=prazo>0?diferencaAcum/prazo:0;
+  document.getElementById('alDiferenca').value=fmtMoney(diferencaMedia);
+
+  // Resultado Alavancagem
+  const anos=prazo/12;
+  const valorAlavancado=Math.max(0,credito-imCompra); // o que o consórcio "alavanca" além do que daria pra comprar
+  const valorizacaoFinal=imValor*(Math.pow(1+imValorizacao,anos)-1);
+  const patrimonio=imValor*Math.pow(1+imValorizacao,anos)+diferencaInvestida-fpTotalParc-fpSaldoFinal;
+
+  document.getElementById('resAlavancado').textContent=fmtMoney(valorAlavancado);
+  document.getElementById('resValorizacao').textContent=fmtMoney(valorizacaoFinal);
+  document.getElementById('resDiferenca').textContent=fmtMoney(diferencaAcum);
+  document.getElementById('resInvest').textContent=fmtMoney(diferencaInvestida);
+  document.getElementById('resPatrimonio').textContent=fmtMoney(patrimonio);
 }
 
 document.getElementById('resetConsorcio').addEventListener('click',()=>{
-  ['credito','prazo','taxaAdm','fundo','reajuste'].forEach(id=>document.getElementById(id).value='');
+  ['credito','prazo','taxaAdm','fundo','reajuste','lanceP'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('expectativa').value='1';
+  document.getElementById('tipoReajuste').selectedIndex=0;
+  document.getElementById('tipoCont').value='sorteio';
+  document.getElementById('lanceP').disabled=true;
   recalc();
 });
 document.getElementById('resetImovel').addEventListener('click',()=>{
-  ['imValor','imCompra','alPrestacao'].forEach(id=>document.getElementById(id).value='');
+  ['imValor','imCompra','fpEntrada','alPrestacao'].forEach(id=>document.getElementById(id).value='');
   recalc();
 });
 document.getElementById('btnLimpar').addEventListener('click',()=>{
@@ -179,6 +293,8 @@ document.getElementById('btnLimpar').addEventListener('click',()=>{
   document.getElementById('resetImovel').click();
 });
 document.getElementById('btnPdf').addEventListener('click',()=>alert('PDF da Alavancagem Patrimonial será implementado depois.'));
+
+document.getElementById('lanceP').disabled=true;
 recalc();
 </script>
 </body>

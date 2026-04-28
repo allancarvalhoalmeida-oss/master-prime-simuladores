@@ -313,9 +313,9 @@ function recalc(){
   const finDFI = unmaskPct(document.getElementById('finDFI').value)/100;
   const finTarifa = unmaskMoney(document.getElementById('finTarifa').value);
 
-  // taxa nominal mensal (padrão dos bancos brasileiros)
-  const iMensal = finJuros / 12;
-  const trMensal = finTR / 12;
+  // taxa equivalente mensal (matematicamente correta, ~0,3% diferença vs Conkey)
+  const iMensal = Math.pow(1+finJuros, 1/12) - 1;
+  const trMensal = Math.pow(1+finTR, 1/12) - 1;
 
   let parcInicial = 0, parcFinal = 0;
   if(finFinanciado > 0 && finPrazo > 0){
