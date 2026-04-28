@@ -286,12 +286,13 @@ function calcularOperacao(op){
   for(let m=1;m<=prazo;m++){stDiferenca+=(ag-parcelaBase); if(m%12===0) ag*=(1+valImob);}
   const stPrevidencia=creditoDisp*Math.pow(1+selic*rentInv,anos);
 
+  // valorVendaPrev = ganho da estratégia (igual Conkey, não total acumulado)
   let valorVendaPrev=0, lucroBruto=0;
   switch(op.estrategia){
-    case 'venda': valorVendaPrev=creditoAtualizado+stVenda; lucroBruto=stVenda-valorInvestidoAteCont; break;
-    case 'imoveis': valorVendaPrev=stImoveis; lucroBruto=stImoveis-valorInvestidoAteCont-parcelaBase*(prazo-expectativa); break;
+    case 'venda': valorVendaPrev=stVenda; lucroBruto=stVenda-valorInvestidoAteCont; break;
+    case 'imoveis': valorVendaPrev=stImoveis-creditoDisp; lucroBruto=valorVendaPrev-valorInvestidoAteCont; break;
     case 'diferenca': valorVendaPrev=stDiferenca; lucroBruto=stDiferenca; break;
-    case 'previdencia': valorVendaPrev=stPrevidencia; lucroBruto=stPrevidencia-valorInvestidoAteCont; break;
+    case 'previdencia': valorVendaPrev=stPrevidencia-creditoDisp; lucroBruto=valorVendaPrev-valorInvestidoAteCont; break;
   }
   const retorno=valorInvestidoAteCont>0?(lucroBruto/valorInvestidoAteCont)*100:0;
 
