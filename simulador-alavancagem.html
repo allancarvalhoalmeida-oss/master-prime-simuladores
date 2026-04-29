@@ -103,7 +103,7 @@
 
     <div class="group-card" style="margin-bottom:14px;">
       <div class="gc-title">Contemplação</div>
-      <div class="grid grid-3">
+      <div class="grid grid-4">
         <div class="field"><label>Tipo de contemplação</label>
           <select id="tipoCont"><option value="sorteio">Sorteio</option><option value="lance">Lance</option></select>
         </div>
@@ -125,9 +125,12 @@
           <input type="text" id="lanceFGTS" placeholder="0,00 %" data-mask="pct2" disabled>
         </div>
         <div class="field"><label>% Lance total</label><input type="text" id="lanceTotalCalc" placeholder="0,00 %" disabled></div>
+        <div class="field"><label>Lance recursos próprios</label><input type="text" id="lanceP_v" disabled></div>
+        <div class="field"><label>Lance embutido</label><input type="text" id="lanceE_v" disabled></div>
+        <div class="field"><label>Lance FGTS</label><input type="text" id="lanceFGTS_v" disabled></div>
         <div class="field"><label>Valor total do lance</label><input type="text" id="valorTotalLance" disabled></div>
-        <div class="field"><label>Crédito disponível</label><input type="text" id="creditoDisponivel" disabled></div>
       </div>
+      <div style="margin-top:14px;"><div class="result-primary"><strong>Crédito disponível</strong><span class="value" id="creditoDisponivel">R$ 0,00</span></div></div>
     </div>
 
     <div class="pos-grid">
@@ -316,9 +319,22 @@ function recalc(){
   if(reajuste>0 && tipoReajuste) creditoAtualizado = credito * Math.pow(1+reajuste, Math.floor(expectativa/12));
   document.getElementById('creditoAtualizado').value = fmtMoney(creditoAtualizado);
 
+  // Saldo devedor no momento da contemplação (iterativo, com reajuste anual)
+  let saldoNoMomentoCont = totalDevido;
+  let parcelaAtualNoMomento = parcelaBase;
+  for(let m = 1; m <= expectativa; m++) {
+    saldoNoMomentoCont -= parcelaAtualNoMomento;
+    if(reajuste>0 && tipoReajuste && m % 12 === 0) {
+      saldoNoMomentoCont *= (1+reajuste);
+      parcelaAtualNoMomento *= (1+reajuste);
+    }
+  }
+  saldoNoMomentoCont = Math.max(0, saldoNoMomentoCont);
+
   // Valor de referência (depende do tipo de lance)
   let valorRef = creditoAtualizado;
   if(tipoLance === 'categoria' || tipoLance === 'cat-carta') valorRef = creditoAtualizado * (1 + taxaAdm + fundo);
+  else if(tipoLance === 'saldo') valorRef = saldoNoMomentoCont;
   document.getElementById('valorRef').value = fmtMoney(valorRef);
 
   // Lances
@@ -327,22 +343,28 @@ function recalc(){
   const lanceEmbutido_v = (tipoLance === 'cat-carta') ? creditoAtualizado * pE : valorRef * pE;
   const lanceFGTS_v = valorRef * pFGTS;
   const valorTotalLance = lanceProprios_v + lanceEmbutido_v + lanceFGTS_v;
+  document.getElementById('lanceP_v').value = fmtMoney(lanceProprios_v);
+  document.getElementById('lanceE_v').value = fmtMoney(lanceEmbutido_v);
+  document.getElementById('lanceFGTS_v').value = fmtMoney(lanceFGTS_v);
   document.getElementById('valorTotalLance').value = fmtMoney(valorTotalLance);
 
-  // Crédito disponível
+  // Crédito disponível (destaque visual igual referencial Conkey)
   const creditoDisp = creditoAtualizado - lanceEmbutido_v - lanceFGTS_v;
-  document.getElementById('creditoDisponivel').value = fmtMoney(creditoDisp);
+  document.getElementById('creditoDisponivel').textContent = fmtMoney(creditoDisp);
 
-  // Pós-contemplação
+  // Pós-contemplação (mesma lógica do Op. Simples)
+  const saldoApoLance = Math.max(0, saldoNoMomentoCont - valorTotalLance);
   const prazoRestante = Math.max(0, prazo - expectativa);
-  const saldoDevedor = Math.max(0, totalDevido - parcelaBase * expectativa - valorTotalLance);
-  const parcReducaoParcela = prazoRestante > 0 ? saldoDevedor / prazoRestante : 0;
-  const parcReducaoPrazo = parcelaBase;
-  const novoPrazoReducao = parcReducaoPrazo > 0 ? Math.ceil(saldoDevedor / parcReducaoPrazo) : 0;
+  const parcReducaoParcela = prazoRestante > 0 ? saldoApoLance / prazoRestante : 0;
+  const parcReducaoPrazo = parcelaAtualNoMomento;
+  const novoPrazoReducao = parcReducaoPrazo > 0 ? Math.ceil(saldoApoLance / parcReducaoPrazo) : 0;
 
-  // CET (fórmula: (1 + custo/disponível)^(1/prazoEf) - 1, arred 2 casas, anual composto)
+  // CET — fórmula descoberta por engenharia reversa: (1 + custo/(credito-lance_total))^(1/prazoEf) - 1
+  // Reduç Parcela: prazoEf = prazo total | Reduç Prazo: prazoEf = expectativa + novoPrazoRestante
+  // Denominador usa credito - lance_total (próprios + embutido + fgts)
   function cet(prazoEf) {
-    const disp = credito - lanceProprios_v;
+    const lanceTotal_pct = pP + pE + pFGTS;
+    const disp = credito * (1 - lanceTotal_pct);
     if(prazoEf <= 0 || disp <= 0) return {m:0, a:0};
     const ratio = (credito*(taxaAdm+fundo)) / disp;
     const m = Math.round((Math.pow(1+ratio, 1/prazoEf) - 1) * 10000) / 10000;
@@ -425,17 +447,16 @@ function recalc(){
 
   // === RESULTADO ===
   const anos = prazo/12;
-  // Valor alavancado do imóvel = imóvel - desembolso à vista (entrada ou compra à vista)
-  const desembolsoInicial = fpTipo === 'avista' ? imCompra : fpEntrada;
-  const valorAlavancado = Math.max(0, imValor - desembolsoInicial);
+  // Valor alavancado do imóvel = crédito disponível - valor do imóvel
+  // (positivo = sobra; negativo = lance embutido reduz o que se pode comprar)
+  const valorAlavancado = creditoDisp - imValor;
 
-  // Valorização do imóvel
-  const valorizacaoFinal = imValor * (Math.pow(1+imValorizacao, anos) - 1);
+  // Valorização do imóvel = valor futuro acumulado (igual referencial Conkey)
   const imovelFinal = imValor * Math.pow(1+imValorizacao, anos);
+  const valorizacaoFinal = imovelFinal;
 
-  // Patrimônio total = imóvel valorizado + investimento - parcelas pagas - saldo devedor
-  // (parcelas e saldo só descontam no caso de financiamento)
-  const patrimonio = imovelFinal + diferencaInvestida - fpTotalParc - fpSaldoFinal;
+  // Patrimônio total = Valor alavancado + Valorização imóvel + Diferença aluguel/parcela + Investimento
+  const patrimonio = valorAlavancado + valorizacaoFinal + diferencaAcum + diferencaInvestida;
 
   document.getElementById('resAlavancado').textContent = fmtMoney(valorAlavancado);
   document.getElementById('resValorizacao').textContent = fmtMoney(valorizacaoFinal);
