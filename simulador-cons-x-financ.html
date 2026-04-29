@@ -456,34 +456,19 @@ function recalc(){
     return r;
   }
 
-  // === CET CONSÓRCIO (via TIR sobre fluxos reais) ===
-  // Cash flows do consorciado: pré-cont paga parcelaInicial, no expectativa recebe creditoAtualizado e paga lance, pós-cont paga parcelaReduzida com reajuste
-  function cetConsorcio(parcelaPos, prazoTotalCenario) {
-    const cf = [0]; // m=0
-    let p = parcelaBase;
-    for(let m = 1; m <= prazoTotalCenario; m++) {
-      let val = -p;
-      if(m === expectativa) {
-        val += creditoAtualizado - valorTotalLance; // recebe crédito, paga lance
-      }
-      // Aplicar reajuste no mês após pagamento
-      if(reajusteAplicaEm(m)) {
-        val *= 1; // efeito do reajuste: parcela já será p×(1+reajuste) no próximo período
-        p *= (1+reajuste);
-      }
-      // Trocar parcela após contemplação
-      if(m === expectativa) {
-        p = parcelaPos;
-        // Se contemplação coincide com aniversário, parcela pós já está reajustada
-      }
-      cf.push(val);
-    }
-    const tir = irr(cf, 0.005);
-    return {m: tir*100, a: (Math.pow(1+tir, 12)-1)*100};
+  // === CET CONSÓRCIO (fórmula equivalente ao referencial) ===
+  // Mensal = (1 + custo/disp)^(1/prazoEf) - 1, onde custo = credito × (adm + fr) e disp = credito × (1 - lanceTotal_pct)
+  function cetConsorcio(prazoEf) {
+    const lanceTotal_pct = pP + pE + pFGTS;
+    const disp = credito * (1 - lanceTotal_pct);
+    if(prazoEf <= 0 || disp <= 0) return {m:0, a:0};
+    const ratio = (credito*(taxaAdm+fundo)) / disp;
+    const m = Math.round((Math.pow(1+ratio, 1/prazoEf) - 1) * 10000) / 10000;
+    const a = Math.pow(1+m, 12) - 1;
+    return {m: m*100, a: a*100};
   }
-
-  const cetA = cetConsorcio(parcReducaoParcela, prazo);                            // Reduç Parcela
-  const cetB = cetConsorcio(parcReducaoPrazo, expectativa + novoPrazoReducao);    // Reduç Prazo
+  const cetA = cetConsorcio(prazo);                            // Reduç Parcela: prazoEf = prazo total
+  const cetB = cetConsorcio(expectativa + novoPrazoReducao);   // Reduç Prazo: prazoEf = expectativa + novoPrazoRestante
   document.getElementById('reducaoParcela_parc').textContent = fmtMoney(parcReducaoParcela);
   document.getElementById('reducaoParcela_prazo').textContent = prazoRestante;
   document.getElementById('reducaoParcela_cm').textContent = fmtPct(cetA.m, 2);
@@ -551,6 +536,8 @@ function recalc(){
   const dfiMensal = finDFIpct;
 
   // Calcular cronograma de financiamento
+  // Convenção: TR aplica como ADITIVO ao juros mensal sobre o saldo (não acumula saldo principal)
+  // Isso bate com prática real do SAC Caixa (TR ajusta o juros do mês, não infla o saldo)
   function calcCronograma(comTarifa) {
     if(finPrazoF <= 0 || finFinanciado <= 0) return {ini:0, fim:0, sumP:0, cf:[]};
     let saldo = finFinanciado;
@@ -560,15 +547,14 @@ function recalc(){
     // PRICE: parcela fixa = PV × i / (1 - (1+i)^-n)
     const pricePMT = finTipo === 'PRICE' && iMensal > 0 ? finFinanciado * iMensal / (1 - Math.pow(1+iMensal, -finPrazoF)) : 0;
     for(let m=1; m<=finPrazoF; m++) {
-      // Aplica TR no saldo
-      saldo *= (1 + trMensal);
-      let parcelaBase, juros, amortMes;
+      // Juros sobre saldo. TR é tratado como aditivo (entra na parcela com tarifa)
+      const juros = saldo * iMensal;
+      const trMes = saldo * trMensal;
+      let parcelaBase, amortMes;
       if(finTipo === 'SAC') {
-        juros = saldo * iMensal;
         amortMes = amort;
         parcelaBase = juros + amortMes;
       } else { // PRICE
-        juros = saldo * iMensal;
         parcelaBase = pricePMT;
         amortMes = parcelaBase - juros;
       }
@@ -576,8 +562,8 @@ function recalc(){
       if(saldo < 0) saldo = 0;
       let parcelaTotal = parcelaBase;
       if(comTarifa) {
-        // MIP sobre saldo, DFI sobre valor do imóvel
-        parcelaTotal += saldo * mipMensal + finImovel * dfiMensal + finTarifa;
+        // TR + MIP sobre saldo, DFI sobre valor do imóvel + tarifa fixa
+        parcelaTotal += trMes + saldo * mipMensal + finImovel * dfiMensal + finTarifa;
       }
       if(m === 1) pIni = parcelaTotal;
       pFim = parcelaTotal;
