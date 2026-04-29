@@ -86,15 +86,15 @@
         </div>
         <div class="field"><label>% Reajuste</label><input type="text" id="reajuste" placeholder="0,00 %" data-mask="pct2"></div>
         <div class="field">
-          <label>% Seguro <input type="checkbox" id="seguroOn"></label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><span class="toggle-input"><input type="checkbox" id="seguroOn"><span class="toggle-slider"></span></span>% Seguro</label>
           <input type="text" id="seguro" placeholder="0,0000 %" data-mask="pct4" disabled>
         </div>
         <div class="field">
-          <label>Redutor de parcela <input type="checkbox" id="redutorOn"></label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><span class="toggle-input"><input type="checkbox" id="redutorOn"><span class="toggle-slider"></span></span>Redutor de parcela</label>
           <input type="text" id="redutor" placeholder="0,00 %" data-mask="pct2" disabled>
         </div>
         <div class="field">
-          <label>% Taxa de adesão <input type="checkbox" id="adesaoOn"></label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><span class="toggle-input"><input type="checkbox" id="adesaoOn"><span class="toggle-slider"></span></span>% Taxa de adesão</label>
           <input type="text" id="adesao" placeholder="0,00 %" data-mask="pct2" disabled>
         </div>
       </div>
@@ -121,7 +121,7 @@
         <div class="field"><label>% Lance recursos próprios</label><input type="text" id="lanceP" placeholder="0,00 %" data-mask="pct2" disabled></div>
         <div class="field"><label>% Lance embutido</label><input type="text" id="lanceE" placeholder="0,00 %" data-mask="pct2" disabled></div>
         <div class="field">
-          <label>% Lance FGTS <input type="checkbox" id="fgtsOn"></label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><span class="toggle-input"><input type="checkbox" id="fgtsOn"><span class="toggle-slider"></span></span>% Lance FGTS</label>
           <input type="text" id="lanceFGTS" placeholder="0,00 %" data-mask="pct2" disabled>
         </div>
         <div class="field"><label>% Lance total</label><input type="text" id="lanceTotalCalc" placeholder="0,00 %" disabled></div>
@@ -262,13 +262,18 @@ document.getElementById('tipoCont').addEventListener('change',e=>{
     if(!isLance && document.getElementById(id).type === 'checkbox') document.getElementById(id).checked=false;
   });
   document.getElementById('lanceFGTS').disabled = !isLance || !document.getElementById('fgtsOn').checked;
+  document.getElementById('lanceFGTS_v').disabled = !isLance || !document.getElementById('fgtsOn').checked;
   recalc();
 });
 
-// FGTS toggle
+// FGTS toggle (habilita % E R$ juntos)
 document.getElementById('fgtsOn').addEventListener('change',e=>{
   document.getElementById('lanceFGTS').disabled = !e.target.checked;
-  if(!e.target.checked) document.getElementById('lanceFGTS').value='';
+  document.getElementById('lanceFGTS_v').disabled = !e.target.checked;
+  if(!e.target.checked) {
+    document.getElementById('lanceFGTS').value='';
+    document.getElementById('lanceFGTS_v').value='';
+  }
   recalc();
 });
 
