@@ -232,18 +232,24 @@ function recalc(){
   document.getElementById('ganhoLiquido').textContent=fmtMoney(ganhoLiquido);
 
   // Resultado
-  // Fazendo à vista: capital compra o bem direto, bem valoriza durante o período
-  const bemValorizadoAVista=credito*Math.pow(1+valorizacao,anos);
+  // Conkey: "Fazendo à vista" usa a MESMA janela de tempo do consórcio (compara o mesmo bem
+  // no mesmo momento: crédito atualizado pela contemplação × valorização nos anos pós-cont).
+  const anosBemValorizadoConsorcio=Math.max(0,(prazo-expectativa)/12);
+  const bemValorizadoConsorcio=creditoAtualizado*Math.pow(1+valorizacao,anosBemValorizadoConsorcio);
+  const bemValorizadoAVista=bemValorizadoConsorcio;  // mesma fórmula que Conkey
   document.getElementById('resAVista').textContent=fmtMoney(bemValorizadoAVista);
 
   // Fazendo com consórcio:
   //  - Compra o bem só ao receber o crédito (na contemplação)
   //  - Bem valoriza por (prazo - expectativa) / 12 anos APÓS contemplação
   //  - Capital fica investido durante todo o período
-  //  - Custos: lance + parcelas
-  const anosBemValorizadoConsorcio=Math.max(0,(prazo-expectativa)/12);
-  const bemValorizadoConsorcio=creditoAtualizado*Math.pow(1+valorizacao,anosBemValorizadoConsorcio);
-  const custoParcelas=parcelaBase*prazo;
+  //  - Custos: lance + parcelas (com reajustes anuais aplicados no aniversário)
+  const period=tipoReajuste?(tipoReajuste.endsWith('-anual')?12:tipoReajuste.endsWith('-semestral')?6:1):12;
+  let custoParcelas=0;
+  for(let m=1;m<=prazo;m++){
+    const fator=(reajuste>0 && tipoReajuste)?Math.pow(1+reajuste,Math.floor(m/period)):1;
+    custoParcelas+=parcelaBase*fator;
+  }
   const totalConsorcio=bemValorizadoConsorcio+valorLiquido-lanceProprios_v-custoParcelas;
 
   document.getElementById('resConsorcio').textContent=fmtMoney(totalConsorcio);

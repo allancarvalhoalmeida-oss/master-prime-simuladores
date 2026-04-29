@@ -310,20 +310,14 @@ function calcularProposta(p){
 
   // Custo da Operação = soma de TODAS as parcelas ao longo do prazo, com reajustes
   // periódicos aplicados a cada `period` meses (anual=12, semestral=6, mensal=1).
+  // Conkey: reajuste é aplicado JÁ no mês de aniversário (mês 12, 24, ...) — fator = floor(m/period).
   let custoOp=0;
-  let parcSimul=parcComRedutor;
-  let creditoSimul=credito;
-  let saldoSimul=totalDevido;
   for(let m=1;m<=prazo;m++){
-    let parcMes=parcSimul;
-    if(seguroOn) parcMes+=creditoSimul*seguro;
+    const fator=(reajuste>0 && tipoReajuste)?Math.pow(1+reajuste,Math.floor(m/period)):1;
+    let parcMes=parcComRedutor*fator;
+    if(seguroOn) parcMes+=credito*fator*seguro;
     if(adesaoOn && adesao>0 && prazoAdesao>0 && m<=prazoAdesao) parcMes+=adesaoMensal;
     custoOp+=parcMes;
-    if(reajuste>0 && tipoReajuste && m%period===0){
-      parcSimul*=(1+reajuste);
-      creditoSimul*=(1+reajuste);
-      saldoSimul*=(1+reajuste);
-    }
   }
   custoOp+=lanceP;  // lance de recursos próprios entra no custo total
 
