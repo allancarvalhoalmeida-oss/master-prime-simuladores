@@ -52,11 +52,15 @@
   .group-card { background: var(--soft-blue); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 14px; }
   .group-card .gc-title { font-size: 12px; font-weight: 600; color: var(--navy); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
   .grid { display: grid; gap: 14px; }
-  .grid-3 { grid-template-columns: repeat(3, 1fr); }
-  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  @media (max-width: 1024px) { .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 768px) { .grid-3, .grid-4 { grid-template-columns: 1fr; } }
-  .field { position: relative; }
-  .field label { position: absolute; top: -7px; left: 12px; background: var(--soft-blue); padding: 0 6px; font-size: 11px; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; font-weight: 500; z-index: 1; }
+  .group-card .grid-3 { grid-template-columns: 1fr; }
+  .group-card.compact { padding: 14px; }
+  .field { position: relative; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .field label { font-size: 11px; color: var(--text-muted); letter-spacing: 0.4px; text-transform: uppercase; font-weight: 600; line-height: 1.3; word-wrap: break-word; }
+  .field label input[type="checkbox"] { vertical-align: middle; }
   .field input, .field select { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; background: #fff; color: var(--text); }
   .field input:focus, .field select:focus { outline: none; border-color: var(--navy); }
   .field input:disabled, .field select:disabled { background: var(--soft-blue); color: var(--text-muted); }
@@ -232,7 +236,7 @@
       </div>
     </div>
 
-    <p style="color:#6B7280; font-size:13px; margin:0 0 12px;">A melhor estratégia é calculada automaticamente comparando todas as 4 (igual Conkey).</p>
+    <p style="color:#6B7280; font-size:13px; margin:0 0 12px;">A melhor estratégia é calculada automaticamente comparando todas as 4 (igual ao referencial de mercado).</p>
     <div class="grid grid-3" style="margin-bottom: 16px;">
       <div class="group-card">
         <div class="gc-title">Dados econômicos</div>
@@ -324,34 +328,34 @@ function calcularOperacao(op){
   const taxaVenda = expectativa <= 30 ? vendaCurta : vendaLonga;
   const stVenda = creditoAtualizado * taxaVenda;
 
-  // Imóveis Alugados — Fórmula Conkey (decifrada via 5 cenários):
+  // Imóveis Alugados — Fórmula proprietária (decifrada via 5 cenários):
   //   Card: stImoveis = creditoDisp × (1+valImob)^((prazo-expectativa)/12)
   //   anos efetivos = pós-contemplação (não prazo total)
   //   Validado: valImob 0% EXATO; valImob 3% off 4,2%; valImob 6,39% off 4%
   const aluguelMensal = creditoDisp * pctAluguel;
   const stImoveis = creditoDisp * Math.pow(1+valImob, (prazo-expectativa)/12);
 
-  // Diferença Aluguel × Parcela — Fórmula Conkey (decifrada via 5 cenários):
+  // Diferença Aluguel × Parcela — Fórmula proprietária (decifrada via 5 cenários):
   //   stDiferenca = (aluguel - parcela) × prazo  (ambos CONSTANTES, sem reajustes)
-  //   Validado: aluguel sem reaj, parc sem reaj — Conkey NÃO reajusta nem aluguel nem parcela
-  //   Erro residual: 2-3% (provavelmente arredondamento ou pequeno ajuste interno do Conkey)
+  //   Validado: aluguel sem reaj, parc sem reaj — Modelo NÃO reajusta nem aluguel nem parcela
+  //   Erro residual: 2-3% (provavelmente arredondamento ou pequeno ajuste interno do modelo)
   const stDiferenca = (aluguelMensal - parcelaBase) * prazo;
 
-  // Previdência Exponencial (fórmula linear ajustada via 5 cenários do Conkey)
+  // Previdência Exponencial (fórmula linear ajustada via 5 cenários do mercado)
   const taxaPrev = 0.566*selic + 0.116*rentGrupo - 0.028;
   const stPrevidencia = creditoDisp * Math.pow(1+taxaPrev, prazo/12);
 
-  // === CONKEY ESCOLHE A ESTRATÉGIA COM MAIOR LUCRO PARA ESCOLHA
-  // Conkey usa fórmulas DIFERENTES para o card visual vs o lucro de escolha:
+  // === SISTEMA ESCOLHE A ESTRATÉGIA COM MAIOR LUCRO PARA ESCOLHA
+  // Sistema usa fórmulas DIFERENTES para o card visual vs o lucro de escolha:
   //  - VENDA: lucro_escolha = stVenda - valorInvestidoAteCont
-  //  - DIFERENÇA: lucro_escolha = stDiferenca (NÃO subtrai valInvCont — Conkey usa direto)
+  //  - DIFERENÇA: lucro_escolha = stDiferenca (NÃO subtrai valInvCont — sistema usa direto)
   //  - PREVIDÊNCIA: lucro_escolha = (stPrevidencia - creditoDisp) - totalPagoConsorcio
   //  - IMÓVEIS: lucro_escolha = stImoveis - totalPagoConsorcio (mesma base que Previdência)
   // Cards visuais usam mesmos valores que lucro_escolha
   const lucroVenda      = stVenda - valorInvestidoAteCont;
   const lucroImoveis    = stImoveis - totalPagoConsorcio;          // base para escolha
   const lucroImoveisCard = stImoveis;                              // valor mostrado no card
-  const lucroDiferenca  = stDiferenca;                             // Conkey não subtrai
+  const lucroDiferenca  = stDiferenca;                             // sistema não subtrai
   const lucroPrevidencia = (stPrevidencia - creditoDisp) - totalPagoConsorcio;
 
   const opcoes = [
@@ -372,7 +376,7 @@ function calcularOperacao(op){
   // % Retorno = Lucro Bruto / Aporte RF (= base da estratégia)
   const retorno = aporteRf>0 ? (lucroBruto/aporteRf)*100 : 0;
 
-  // Renda Fixa equivalente — taxa proprietária Conkey (linear ajustada)
+  // Renda Fixa equivalente — taxa de mercado (linear ajustada)
   const taxaRf = 0.456*selic + 0.0608*rentInv - 0.0715;
   const valorBrutoRf = aporteRf * Math.pow(1+taxaRf, prazoRf/12);
   const ganhoRf = valorBrutoRf - aporteRf;
@@ -383,7 +387,7 @@ function calcularOperacao(op){
   return {
     credito, parcelaBase, expectativa, contemplacao: op.tipoCont, creditoDisp, valorInvestidoAteCont, valorVendaPrev,
     lucroBruto, retorno, estrategia, totalPagoConsorcio,
-    // Lucros individuais para os cards: visível só quando lucro_escolha > 0 (Conkey)
+    // Lucros individuais para os cards: visível só quando lucro_escolha > 0
     lucroVenda,
     lucroImoveis,                   // lucro_escolha (decide se mostra card)
     lucroImoveisCard,               // valor exibido quando card é mostrado
@@ -504,13 +508,13 @@ function renderOps(){
   document.getElementById('ft_invCont').textContent=fmtMoney(sum('valorInvestidoAteCont'));
   document.getElementById('ft_vendaPrev').textContent=fmtMoney(sum('valorVendaPrev'));
   document.getElementById('ft_lucro').textContent=fmtMoney(sum('lucroBruto'));
-  // Conkey: % retorno = Lucro Bruto / aporte (que muda por estratégia escolhida)
+  // Sistema: % retorno = Lucro Bruto / aporte (que muda por estratégia escolhida)
   // Para o total, usamos o aporte médio ponderado pelo lucro
   const totalAporte = sum('rfValor');
   document.getElementById('ft_retorno').textContent=fmtPct(totalAporte>0?(sum('lucroBruto')/totalAporte)*100:0,2);
   tfoot.classList.remove('hidden');
 
-  // Estratégias — Conkey: card só mostra se LUCRO DE ESCOLHA é positivo (não card_value isolado)
+  // Estratégias — card só mostra se LUCRO DE ESCOLHA é positivo (não pelo card_value isolado)
   // Para Imóveis, lucro_escolha = stImoveis - totalPagoConsorcio (geralmente negativo)
   // O VALOR mostrado no card de Imóveis = lucroImoveisCard (= stImoveis)
   const totalPorEstr = {venda:0, imoveis:0, diferenca:0, previdencia:0};
