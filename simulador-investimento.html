@@ -153,15 +153,15 @@
   <div class="ops-table-wrapper">
     <table class="ops-table">
       <thead>
-        <tr><th colspan="7">Investimento em Renda Fixa (equivalente)</th></tr>
+        <tr><th colspan="8">Investimento em Renda Fixa (equivalente)</th></tr>
         <tr>
-          <th>#</th><th>% do CDI</th><th>Valor Investido</th><th>Prazo</th><th>Valor Bruto Acumulado</th><th>I.R</th><th>Rentabilidade Líquida</th>
+          <th>#</th><th>% do CDI</th><th>Valor Investido</th><th>Prazo</th><th>Valor Bruto Acumulado</th><th>I.R</th><th>Rentabilidade Líquida</th><th>% de Retorno</th>
         </tr>
       </thead>
-      <tbody id="rfBody"><tr class="empty-row"><td colspan="7">Adicione uma operação acima.</td></tr></tbody>
+      <tbody id="rfBody"><tr class="empty-row"><td colspan="8">Adicione uma operação acima.</td></tr></tbody>
       <tfoot id="rfFoot" class="hidden">
         <tr>
-          <td>TOTAL</td><td>—</td><td id="rf_valor">R$ 0,00</td><td>—</td><td id="rf_bruto">R$ 0,00</td><td id="rf_ir">R$ 0,00</td><td id="rf_liquida">R$ 0,00</td>
+          <td>TOTAL</td><td>—</td><td id="rf_valor">R$ 0,00</td><td>—</td><td id="rf_bruto">R$ 0,00</td><td id="rf_ir">R$ 0,00</td><td id="rf_liquida">R$ 0,00</td><td id="rf_retorno">0,00 %</td>
         </tr>
       </tfoot>
     </table>
@@ -289,7 +289,7 @@ function calcularOperacao(op){
   for(let m=1;m<=prazo;m++){stDiferenca+=(ag-parcelaBase); if(m%12===0) ag*=(1+valImob);}
   const stPrevidencia=creditoDisp*Math.pow(1+selic*rentInv,anos);
 
-  // valorVendaPrev = ganho da estratégia (igual Conkey, não total acumulado)
+  // valorVendaPrev = ganho da estratégia escolhida (igual Conkey)
   let valorVendaPrev=0, lucroBruto=0;
   switch(op.estrategia){
     case 'venda': valorVendaPrev=stVenda; lucroBruto=stVenda-valorInvestidoAteCont; break;
@@ -297,21 +297,24 @@ function calcularOperacao(op){
     case 'diferenca': valorVendaPrev=stDiferenca; lucroBruto=stDiferenca; break;
     case 'previdencia': valorVendaPrev=stPrevidencia-creditoDisp; lucroBruto=valorVendaPrev-valorInvestidoAteCont; break;
   }
-  const retorno=valorInvestidoAteCont>0?(lucroBruto/valorInvestidoAteCont)*100:0;
+  // Conkey: % retorno = lucro LÍQUIDO de IR (15%) sobre o investido
+  const lucroLiquido=lucroBruto*0.85;
+  const retorno=valorInvestidoAteCont>0?(lucroLiquido/valorInvestidoAteCont)*100:0;
 
-  // Renda fixa equivalente
+  // Renda fixa equivalente — Conkey: 100% do CDI, juros só por anos completos
   const cdi=selic*0.9933;
-  const taxaRf=cdi*rentGrupo;
-  const valorBrutoRf=valorInvestidoAteCont*Math.pow(1+taxaRf,expectativa/12);
-  const ganho=valorBrutoRf-valorInvestidoAteCont;
-  const ir=ganho*0.15;
-  const rfLiquido=valorBrutoRf-ir;
+  const anosCompletos=Math.floor(expectativa/12);
+  const valorBrutoRf=valorInvestidoAteCont*Math.pow(1+cdi,anosCompletos);
+  const ganhoRf=valorBrutoRf-valorInvestidoAteCont;
+  const irRf=ganhoRf*0.15;
+  const rfLiquido=ganhoRf-irRf;          // LUCRO líquido (não valor acumulado)
+  const rfRetorno=valorInvestidoAteCont>0?(rfLiquido/valorInvestidoAteCont)*100:0;
 
   return {
     credito, parcelaBase, expectativa, contemplacao: op.tipoCont, creditoDisp, valorInvestidoAteCont, valorVendaPrev,
     lucroBruto, retorno, estrategia: op.estrategia,
     stVenda, stImoveis, stDiferenca, stPrevidencia,
-    rfValor: valorInvestidoAteCont, rfCdi: cdi*100, rfBruto: valorBrutoRf, rfIR: ir, rfLiquido
+    rfValor: valorInvestidoAteCont, rfCdi: 100, rfBruto: valorBrutoRf, rfIR: irRf, rfLiquido, rfRetorno
   };
 }
 
@@ -358,7 +361,7 @@ function renderOps(){
   const rfFoot=document.getElementById('rfFoot');
   if(operacoes.length===0){
     tbody.innerHTML='<tr class="empty-row"><td colspan="12">Nenhuma operação adicionada. Clique abaixo para começar.</td></tr>';
-    rfBody.innerHTML='<tr class="empty-row"><td colspan="7">Adicione uma operação acima.</td></tr>';
+    rfBody.innerHTML='<tr class="empty-row"><td colspan="8">Adicione uma operação acima.</td></tr>';
     tfoot.classList.add('hidden'); rfFoot.classList.add('hidden');
     ['stVenda','stImoveis','stDiferenca','stPrevidencia','stPatrimonio'].forEach(id=>document.getElementById(id).textContent='R$ 0,00');
     return;
@@ -388,15 +391,20 @@ function renderOps(){
   document.getElementById('ft_vendaPrev').textContent=fmtMoney(sum('valorVendaPrev'));
   document.getElementById('ft_lucro').textContent=fmtMoney(sum('lucroBruto'));
   const totalInv=sum('valorInvestidoAteCont');
-  document.getElementById('ft_retorno').textContent=fmtPct(totalInv>0?(sum('lucroBruto')/totalInv)*100:0,2);
+  // Conkey: % retorno = lucro LÍQUIDO de IR / investido
+  document.getElementById('ft_retorno').textContent=fmtPct(totalInv>0?(sum('lucroBruto')*0.85/totalInv)*100:0,2);
   tfoot.classList.remove('hidden');
 
-  // Estratégias agregadas
-  document.getElementById('stVenda').textContent=fmtMoney(sum('stVenda'));
-  document.getElementById('stImoveis').textContent=fmtMoney(sum('stImoveis'));
-  document.getElementById('stDiferenca').textContent=fmtMoney(sum('stDiferenca'));
-  document.getElementById('stPrevidencia').textContent=fmtMoney(sum('stPrevidencia'));
-  document.getElementById('stPatrimonio').textContent=fmtMoney(sum('valorVendaPrev'));
+  // Estratégias — Conkey: só estratégia ATIVA mostra valor (lucro bruto), outras = "R$ -"
+  const lucroPorEstr={venda:0,imoveis:0,diferenca:0,previdencia:0};
+  calcs.forEach(c=>{lucroPorEstr[c.estrategia]+=c.lucroBruto;});
+  const showEstr=(id,val)=>{document.getElementById(id).textContent=val>0?fmtMoney(val):'R$ -';};
+  showEstr('stVenda',lucroPorEstr.venda);
+  showEstr('stImoveis',lucroPorEstr.imoveis);
+  showEstr('stDiferenca',lucroPorEstr.diferenca);
+  showEstr('stPrevidencia',lucroPorEstr.previdencia);
+  // Patrimônio Total = soma dos lucros das estratégias ativas
+  document.getElementById('stPatrimonio').textContent=fmtMoney(sum('lucroBruto'));
 
   // Renda fixa
   rfBody.innerHTML=calcs.map((c,i)=>`<tr>
@@ -407,11 +415,14 @@ function renderOps(){
     <td>${fmtMoney(c.rfBruto)}</td>
     <td>${fmtMoney(c.rfIR)}</td>
     <td>${fmtMoney(c.rfLiquido)}</td>
+    <td>${fmtPct(c.rfRetorno,2)}</td>
   </tr>`).join('');
   document.getElementById('rf_valor').textContent=fmtMoney(sum('rfValor'));
   document.getElementById('rf_bruto').textContent=fmtMoney(sum('rfBruto'));
   document.getElementById('rf_ir').textContent=fmtMoney(sum('rfIR'));
   document.getElementById('rf_liquida').textContent=fmtMoney(sum('rfLiquido'));
+  const totalRfInv=sum('rfValor');
+  document.getElementById('rf_retorno').textContent=fmtPct(totalRfInv>0?(sum('rfLiquido')/totalRfInv)*100:0,2);
   rfFoot.classList.remove('hidden');
 }
 
