@@ -125,9 +125,9 @@
           <input type="text" id="lanceFGTS" placeholder="0,00 %" data-mask="pct2" disabled>
         </div>
         <div class="field"><label>% Lance total</label><input type="text" id="lanceTotalCalc" placeholder="0,00 %" disabled></div>
-        <div class="field"><label>Lance recursos próprios</label><input type="text" id="lanceP_v" disabled></div>
-        <div class="field"><label>Lance embutido</label><input type="text" id="lanceE_v" disabled></div>
-        <div class="field"><label>Lance FGTS</label><input type="text" id="lanceFGTS_v" disabled></div>
+        <div class="field"><label>Lance recursos próprios</label><input type="text" id="lanceP_v" placeholder="R$ 0,00" data-mask="money" disabled></div>
+        <div class="field"><label>Lance embutido</label><input type="text" id="lanceE_v" placeholder="R$ 0,00" data-mask="money" disabled></div>
+        <div class="field"><label>Lance FGTS</label><input type="text" id="lanceFGTS_v" placeholder="R$ 0,00" data-mask="money" disabled></div>
         <div class="field"><label>Valor total do lance</label><input type="text" id="valorTotalLance" disabled></div>
       </div>
       <div style="margin-top:14px;"><div class="result-primary"><strong>Crédito disponível</strong><span class="value" id="creditoDisponivel">R$ 0,00</span></div></div>
@@ -195,10 +195,10 @@
       </div>
       <div class="group-card">
         <div class="gc-title">Investimento da diferença</div>
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+        <label style="display:flex; align-items:center; gap:10px; margin-bottom:14px; cursor:pointer;">
           <span class="toggle-input"><input type="checkbox" id="invOn"><span class="toggle-slider"></span></span>
           <span style="font-size:13px; color:var(--text-muted);">Investir a diferença mensal a CDI</span>
-        </div>
+        </label>
         <div class="grid grid-2">
           <div class="field"><label>% Selic (a.a.)</label><input type="text" id="invSelic" value="15,00 %" data-mask="pct2" disabled></div>
           <div class="field"><label>% Rentabilidade CDI</label><input type="text" id="invRent" value="100,00 %" data-mask="pct2" disabled></div>
@@ -255,7 +255,7 @@ syncToggle('adesaoOn','adesao');
 // Tipo Contemplação habilita/desabilita Lance
 document.getElementById('tipoCont').addEventListener('change',e=>{
   const isLance=e.target.value==='lance';
-  ['tipoLance','lanceP','lanceE','fgtsOn'].forEach(id=>{
+  ['tipoLance','lanceP','lanceE','fgtsOn','lanceP_v','lanceE_v'].forEach(id=>{
     document.getElementById(id).disabled = !isLance;
     if(!isLance && document.getElementById(id).type !== 'checkbox') document.getElementById(id).value='';
     if(!isLance && document.getElementById(id).type === 'checkbox') document.getElementById(id).checked=false;
@@ -295,6 +295,38 @@ document.getElementById('invOn').addEventListener('change',e=>{
   });
 });
 
+// Bidirecional R$ → % (editar valor do lance atualiza o percentual)
+let _lanceReverseSync = false;
+function setupLanceReverse(rsId, pctId) {
+  const rsEl = document.getElementById(rsId);
+  const pctEl = document.getElementById(pctId);
+  rsEl.addEventListener('input', e => {
+    e.target.value = maskMoney(e.target.value);
+    _lanceReverseSync = true;
+    // Calcular valorRef no momento (igual recalc)
+    const credito = unmaskMoney(document.getElementById('credito').value);
+    const reajuste = unmaskPct(document.getElementById('reajuste').value)/100;
+    const tipoReajuste = document.getElementById('tipoReajuste').value;
+    const expectativa = parseInt(document.getElementById('expectativa').value)||0;
+    let creditoAtualizado = credito;
+    if(reajuste>0 && tipoReajuste && expectativa > 0) {
+      creditoAtualizado = credito * Math.pow(1+reajuste, Math.max(0, Math.floor((expectativa-1)/12)));
+    }
+    const tipoLance = document.getElementById('tipoLance').value;
+    let valorRef = creditoAtualizado;
+    if(tipoLance === 'categoria') valorRef = creditoAtualizado * (1 + 0.20);
+    const valorRs = unmaskMoney(rsEl.value);
+    if(valorRef > 0) {
+      const novoPct = (valorRs / valorRef) * 100;
+      pctEl.value = novoPct.toFixed(4).replace('.',',') + ' %';
+    }
+    _lanceReverseSync = false;
+    recalc();
+  });
+}
+setupLanceReverse('lanceP_v', 'lanceP');
+setupLanceReverse('lanceE_v', 'lanceE');
+
 function recalc(){
   const credito = unmaskMoney(document.getElementById('credito').value);
   const prazo = parseInt(document.getElementById('prazo').value||'0',10);
@@ -315,8 +347,13 @@ function recalc(){
   document.getElementById('parcelaInicial').textContent = fmtMoney(parcelaBase);
 
   // Crédito atualizado (com reajuste anual)
+  // Crédito atualizado: reajuste aplica nos aniversários ANTES da contemplação
+  // (no aniversário exato da contemp, reajuste ainda não foi aplicado — bate com referencial Conkey)
   let creditoAtualizado = credito;
-  if(reajuste>0 && tipoReajuste) creditoAtualizado = credito * Math.pow(1+reajuste, Math.floor(expectativa/12));
+  if(reajuste>0 && tipoReajuste && expectativa > 0) {
+    const aniversariosCompletos = Math.max(0, Math.floor((expectativa - 1) / 12));
+    creditoAtualizado = credito * Math.pow(1+reajuste, aniversariosCompletos);
+  }
   document.getElementById('creditoAtualizado').value = fmtMoney(creditoAtualizado);
 
   // Saldo devedor no momento da contemplação (iterativo, com reajuste anual)
@@ -324,7 +361,8 @@ function recalc(){
   let parcelaAtualNoMomento = parcelaBase;
   for(let m = 1; m <= expectativa; m++) {
     saldoNoMomentoCont -= parcelaAtualNoMomento;
-    if(reajuste>0 && tipoReajuste && m % 12 === 0) {
+    // Reajuste aplica no aniversário ANTES da contemplação (não no mês exato da contemp)
+    if(reajuste>0 && tipoReajuste && m % 12 === 0 && m < expectativa) {
       saldoNoMomentoCont *= (1+reajuste);
       parcelaAtualNoMomento *= (1+reajuste);
     }
@@ -343,9 +381,12 @@ function recalc(){
   const lanceEmbutido_v = (tipoLance === 'cat-carta') ? creditoAtualizado * pE : valorRef * pE;
   const lanceFGTS_v = valorRef * pFGTS;
   const valorTotalLance = lanceProprios_v + lanceEmbutido_v + lanceFGTS_v;
-  document.getElementById('lanceP_v').value = fmtMoney(lanceProprios_v);
-  document.getElementById('lanceE_v').value = fmtMoney(lanceEmbutido_v);
-  document.getElementById('lanceFGTS_v').value = fmtMoney(lanceFGTS_v);
+  // Atualiza R$ a partir de %, exceto quando o usuário acabou de editar o R$
+  if(!_lanceReverseSync) {
+    if(document.activeElement?.id !== 'lanceP_v') document.getElementById('lanceP_v').value = fmtMoney(lanceProprios_v);
+    if(document.activeElement?.id !== 'lanceE_v') document.getElementById('lanceE_v').value = fmtMoney(lanceEmbutido_v);
+    document.getElementById('lanceFGTS_v').value = fmtMoney(lanceFGTS_v);
+  }
   document.getElementById('valorTotalLance').value = fmtMoney(valorTotalLance);
 
   // Crédito disponível (destaque visual igual referencial Conkey)
@@ -466,7 +507,7 @@ function recalc(){
 }
 
 document.getElementById('resetConsorcio').addEventListener('click',()=>{
-  ['credito','prazo','taxaAdm','fundo','reajuste','seguro','redutor','adesao','lanceP','lanceE','lanceFGTS'].forEach(id=>document.getElementById(id).value='');
+  ['credito','prazo','taxaAdm','fundo','reajuste','seguro','redutor','adesao','lanceP','lanceE','lanceFGTS','lanceP_v','lanceE_v','lanceFGTS_v'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('expectativa').value='1';
   document.getElementById('tipoReajuste').value='';
   document.getElementById('tipoCont').value='sorteio';
