@@ -476,32 +476,33 @@ function recalc(){
   const prazoRestanteParaInv = Math.max(0, prazo - expectativa);
   if(document.activeElement?.id !== 'invPrazo' && !invPrazoEl.value) invPrazoEl.value = prazoRestanteParaInv;
 
-  // Diferença aluguel × parcela: só conta pós-contemplação
-  // Pré-cont: você ainda paga aluguel + parcela cheia (não acumula diferença)
-  // Pós-cont: aluguel cresce 5,32%/ano, parcela_reduzida cresce 4%/ano (igual ao referencial Conkey)
-  let diferencaAcum = 0, diferencaInvestida = 0;
-  let alAtual = alPrestacao, parcelaAtual = parcReducaoParcela;
+  // Diferença aluguel × parcela (fórmula descoberta por engenharia reversa do referencial)
+  // Período = sum_aluguel(reajustado anualmente N_anos) - parcela_red × N_meses
+  // N_anos = ceil((prazo - expectativa) / 12), N_meses = N_anos × 12
+  const N_anos = Math.max(0, Math.ceil((prazo - expectativa) / 12));
+  const N_meses = N_anos * 12;
+  let sum_aluguel = 0;
+  let alYr = alPrestacao;
+  for(let yr = 0; yr < N_anos; yr++) {
+    sum_aluguel += alYr * 12;
+    alYr *= (1 + alCorrecao);
+  }
+  const sum_parcela_red = parcReducaoParcela * N_meses;
+  const diferencaAcum = sum_aluguel - sum_parcela_red;
+  const diferencaMedia = N_meses > 0 ? diferencaAcum / N_meses : 0;
+
+  // Investimento da diferença mensal (só quando toggle ON)
+  let diferencaInvestida = 0;
   const invOn = document.getElementById('invOn').checked;
   const invCDI_aa = invOn ? unmaskPct(document.getElementById('invCDI').value)/100 : 0;
   const invRent = invOn ? unmaskPct(document.getElementById('invRent').value)/100 : 0;
-  const invPrazoMeses = invOn ? (parseInt(invPrazoEl.value)||prazoRestanteParaInv) : 0;
+  const invPrazoMeses = invOn ? (parseInt(invPrazoEl.value)||N_meses) : 0;
   const invTaxa = invCDI_aa * invRent;
   const invMensal = invTaxa>0 ? Math.pow(1+invTaxa, 1/12) - 1 : 0;
-
-  // Loop só nos meses pós-contemplação (de m = expectativa+1 até m = prazo)
-  const mesesPos = Math.max(0, prazo - expectativa);
-  for(let m = 1; m <= mesesPos; m++) {
-    const diff = alAtual - parcelaAtual;
-    diferencaAcum += diff;
-    if(invOn) diferencaInvestida = diferencaInvestida * (1+invMensal) + Math.max(0, diff);
-    // Reajustes anuais (ano absoluto = expectativa + m)
-    const mesAbsoluto = expectativa + m;
-    if(mesAbsoluto % 12 === 0 && m < mesesPos) {
-      alAtual *= (1+alCorrecao);
-      if(reajuste>0 && tipoReajuste) parcelaAtual *= (1+reajuste);
-    }
+  if(invOn && invMensal > 0 && diferencaMedia > 0) {
+    // Annuity future value: PMT × ((1+r)^n - 1) / r
+    diferencaInvestida = diferencaMedia * (Math.pow(1+invMensal, invPrazoMeses) - 1) / invMensal;
   }
-  const diferencaMedia = mesesPos>0 ? diferencaAcum/mesesPos : 0;
   document.getElementById('alDiferenca').value = fmtMoney(diferencaMedia);
 
   // === RESULTADO ===
