@@ -118,13 +118,13 @@
         </div>
         <div class="field"><label>Valor de referência</label><input type="text" id="valorRef" disabled></div>
         <div class="field"><label>Crédito atualizado</label><input type="text" id="creditoAtualizado" disabled></div>
-        <div class="field"><label>% Lance recursos próprios</label><input type="text" id="lanceP" placeholder="0,00 %" data-mask="pct2" disabled></div>
-        <div class="field"><label>% Lance embutido</label><input type="text" id="lanceE" placeholder="0,00 %" data-mask="pct2" disabled></div>
+        <div class="field"><label>% Lance recursos próprios</label><input type="text" id="lanceP" placeholder="0,0000 %" data-mask="pct4" disabled></div>
+        <div class="field"><label>% Lance embutido</label><input type="text" id="lanceE" placeholder="0,0000 %" data-mask="pct4" disabled></div>
         <div class="field">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><span class="toggle-input"><input type="checkbox" id="fgtsOn"><span class="toggle-slider"></span></span>% Lance FGTS</label>
-          <input type="text" id="lanceFGTS" placeholder="0,00 %" data-mask="pct2" disabled>
+          <input type="text" id="lanceFGTS" placeholder="0,0000 %" data-mask="pct4" disabled>
         </div>
-        <div class="field"><label>% Lance total</label><input type="text" id="lanceTotalCalc" placeholder="0,00 %" disabled></div>
+        <div class="field"><label>% Lance total</label><input type="text" id="lanceTotalCalc" placeholder="0,0000 %" disabled></div>
         <div class="field"><label>Lance recursos próprios</label><input type="text" id="lanceP_v" placeholder="R$ 0,00" data-mask="money" disabled></div>
         <div class="field"><label>Lance embutido</label><input type="text" id="lanceE_v" placeholder="R$ 0,00" data-mask="money" disabled></div>
         <div class="field"><label>Lance FGTS</label><input type="text" id="lanceFGTS_v" placeholder="R$ 0,00" data-mask="money" disabled></div>
@@ -298,7 +298,7 @@ document.getElementById('invOn').addEventListener('change',e=>{
     const p = unmaskPct(document.getElementById('lanceP').value);
     const e = unmaskPct(document.getElementById('lanceE').value);
     const f = unmaskPct(document.getElementById('lanceFGTS').value);
-    document.getElementById('lanceTotalCalc').value = (p+e+f).toFixed(2).replace('.',',') + ' %';
+    document.getElementById('lanceTotalCalc').value = (p+e+f).toFixed(4).replace('.',',') + ' %';
   });
 });
 
