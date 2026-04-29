@@ -215,7 +215,7 @@
       <div class="result-row"><strong>Valor alavancado do imóvel</strong><span class="value" id="resAlavancado">R$ 0,00</span></div>
       <div class="result-row"><strong>Valorização do imóvel</strong><span class="value" id="resValorizacao">R$ 0,00</span></div>
       <div class="result-row"><strong>Diferença aluguel × parcela (período)</strong><span class="value" id="resDiferenca">R$ 0,00</span></div>
-      <div class="result-row"><strong>Investimento da diferença</strong><span class="value" id="resInvest">R$ 0,00</span></div>
+      <div class="result-row" id="rowInvestimento" style="display:none;"><strong>Investimento + Rentabilidade</strong><span class="value" id="resInvest">R$ 0,00</span></div>
     </div>
     <div style="margin-top:14px;"><div class="result-primary"><strong>Patrimônio total</strong><span class="value" id="resPatrimonio">R$ 0,00</span></div></div>
   </section>
@@ -476,9 +476,11 @@ function recalc(){
   const prazoRestanteParaInv = Math.max(0, prazo - expectativa);
   if(document.activeElement?.id !== 'invPrazo' && !invPrazoEl.value) invPrazoEl.value = prazoRestanteParaInv;
 
-  // Diferença aluguel × parcela acumulada
+  // Diferença aluguel × parcela: só conta pós-contemplação
+  // Pré-cont: você ainda paga aluguel + parcela cheia (não acumula diferença)
+  // Pós-cont: aluguel cresce 5,32%/ano, parcela_reduzida cresce 4%/ano (igual ao referencial Conkey)
   let diferencaAcum = 0, diferencaInvestida = 0;
-  let alAtual = alPrestacao, parcelaAtual = parcelaBase;
+  let alAtual = alPrestacao, parcelaAtual = parcReducaoParcela;
   const invOn = document.getElementById('invOn').checked;
   const invCDI_aa = invOn ? unmaskPct(document.getElementById('invCDI').value)/100 : 0;
   const invRent = invOn ? unmaskPct(document.getElementById('invRent').value)/100 : 0;
@@ -486,16 +488,20 @@ function recalc(){
   const invTaxa = invCDI_aa * invRent;
   const invMensal = invTaxa>0 ? Math.pow(1+invTaxa, 1/12) - 1 : 0;
 
-  for(let m=1; m<=prazo; m++) {
+  // Loop só nos meses pós-contemplação (de m = expectativa+1 até m = prazo)
+  const mesesPos = Math.max(0, prazo - expectativa);
+  for(let m = 1; m <= mesesPos; m++) {
     const diff = alAtual - parcelaAtual;
     diferencaAcum += diff;
     if(invOn) diferencaInvestida = diferencaInvestida * (1+invMensal) + Math.max(0, diff);
-    if(m % 12 === 0) {
+    // Reajustes anuais (ano absoluto = expectativa + m)
+    const mesAbsoluto = expectativa + m;
+    if(mesAbsoluto % 12 === 0 && m < mesesPos) {
       alAtual *= (1+alCorrecao);
       if(reajuste>0 && tipoReajuste) parcelaAtual *= (1+reajuste);
     }
   }
-  const diferencaMedia = prazo>0 ? diferencaAcum/prazo : 0;
+  const diferencaMedia = mesesPos>0 ? diferencaAcum/mesesPos : 0;
   document.getElementById('alDiferenca').value = fmtMoney(diferencaMedia);
 
   // === RESULTADO ===
@@ -515,6 +521,7 @@ function recalc(){
   document.getElementById('resValorizacao').textContent = fmtMoney(valorizacaoFinal);
   document.getElementById('resDiferenca').textContent = fmtMoney(diferencaAcum);
   document.getElementById('resInvest').textContent = fmtMoney(diferencaInvestida);
+  document.getElementById('rowInvestimento').style.display = invOn ? '' : 'none';
   document.getElementById('resPatrimonio').textContent = fmtMoney(patrimonio);
 }
 
