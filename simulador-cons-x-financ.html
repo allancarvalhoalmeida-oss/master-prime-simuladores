@@ -303,13 +303,6 @@ document.getElementById('fgtsOn').addEventListener('change',e=>{
   recalc();
 });
 
-// Forma pagamento
-document.getElementById('fpTipo').addEventListener('change',e=>{
-  document.getElementById('fpEntrada').disabled = e.target.value !== 'financiamento';
-  if(e.target.value !== 'financiamento') document.getElementById('fpEntrada').value='';
-  recalc();
-});
-
 // Investimento toggle (3 caixas: CDI, Rentab, Prazo)
 document.getElementById('invOn').addEventListener('change',e=>{
   document.getElementById('invCDI').disabled = !e.target.checked;
