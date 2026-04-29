@@ -199,9 +199,10 @@
           <span class="toggle-input"><input type="checkbox" id="invOn"><span class="toggle-slider"></span></span>
           <span style="font-size:13px; color:var(--text-muted);">Investir a diferença mensal a CDI</span>
         </label>
-        <div class="grid grid-2">
-          <div class="field"><label>% Selic (a.a.)</label><input type="text" id="invSelic" value="15,00 %" data-mask="pct2" disabled></div>
-          <div class="field"><label>% Rentabilidade CDI</label><input type="text" id="invRent" value="100,00 %" data-mask="pct2" disabled></div>
+        <div class="grid grid-3">
+          <div class="field"><label>CDI (a.a.)</label><input type="text" id="invCDI" value="14,90 %" data-mask="pct2" disabled></div>
+          <div class="field"><label>Rentabilidade do CDI</label><input type="text" id="invRent" value="100,00 %" data-mask="pct2" disabled></div>
+          <div class="field"><label>Prazo (meses)</label><input type="text" id="invPrazo" data-mask="int" disabled></div>
         </div>
       </div>
     </div>
@@ -278,10 +279,11 @@ document.getElementById('fpTipo').addEventListener('change',e=>{
   recalc();
 });
 
-// Investimento toggle
+// Investimento toggle (3 caixas: CDI, Rentab, Prazo)
 document.getElementById('invOn').addEventListener('change',e=>{
-  document.getElementById('invSelic').disabled = !e.target.checked;
+  document.getElementById('invCDI').disabled = !e.target.checked;
   document.getElementById('invRent').disabled = !e.target.checked;
+  document.getElementById('invPrazo').disabled = !e.target.checked;
   recalc();
 });
 
@@ -464,14 +466,19 @@ function recalc(){
   const alPct = imCompra>0 ? (alPrestacao/imCompra)*100 : 0;
   document.getElementById('alPct').value = fmtPct(alPct, 2);
 
+  // Auto-preencher prazo de investimento com prazo restante após contemplação
+  const invPrazoEl = document.getElementById('invPrazo');
+  const prazoRestanteParaInv = Math.max(0, prazo - expectativa);
+  if(document.activeElement?.id !== 'invPrazo' && !invPrazoEl.value) invPrazoEl.value = prazoRestanteParaInv;
+
   // Diferença aluguel × parcela acumulada
   let diferencaAcum = 0, diferencaInvestida = 0;
   let alAtual = alPrestacao, parcelaAtual = parcelaBase;
   const invOn = document.getElementById('invOn').checked;
-  const invSelic = invOn ? unmaskPct(document.getElementById('invSelic').value)/100 : 0;
+  const invCDI_aa = invOn ? unmaskPct(document.getElementById('invCDI').value)/100 : 0;
   const invRent = invOn ? unmaskPct(document.getElementById('invRent').value)/100 : 0;
-  const invCDI = invSelic - 0.001; // CDI = Selic - 0,10pp
-  const invTaxa = invCDI * invRent;
+  const invPrazoMeses = invOn ? (parseInt(invPrazoEl.value)||prazoRestanteParaInv) : 0;
+  const invTaxa = invCDI_aa * invRent;
   const invMensal = invTaxa>0 ? Math.pow(1+invTaxa, 1/12) - 1 : 0;
 
   for(let m=1; m<=prazo; m++) {
