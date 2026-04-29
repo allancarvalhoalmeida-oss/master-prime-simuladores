@@ -325,6 +325,10 @@ document.getElementById('invSelic').addEventListener('blur', () => {
     recalc();
   }
 });
+// Marcar invPrazo como editado manualmente quando user digitar
+document.getElementById('invPrazo').addEventListener('input', e => {
+  e.target.dataset.userEdited = '1';
+});
 
 // Auto-calcular % Lance Total
 ['lanceP','lanceE','lanceFGTS'].forEach(id=>{
@@ -510,23 +514,9 @@ function recalc(){
   document.getElementById('reducaoPrazo_cm').textContent = fmtPct(cetB.m, 2);
   document.getElementById('reducaoPrazo_ca').textContent = fmtPct(cetB.a, 2);
 
-  // === Custo Operação Consórcio = soma de todas as parcelas (pre + pos com reajuste), sem lance ===
-  let custoConsorcio = 0;
-  let pAtual = parcelaBase;
-  for(let m = 1; m <= prazo; m++) {
-    if(m <= expectativa) {
-      custoConsorcio += pAtual;
-    } else {
-      custoConsorcio += pAtual;
-    }
-    if(reajusteAplicaEm(m) && m < prazo) {
-      pAtual *= (1+reajuste);
-    }
-    if(m === expectativa) {
-      pAtual = parcReducaoParcela;
-      // Se m=expectativa coincide com aniversário, o reajuste já foi aplicado acima (parcela pos não reajusta no momento da contemp)
-    }
-  }
+  // === Custo Operação Consórcio (idêntico calcSumParcelas — reajuste fire ANTES de pagar) ===
+  // Reusa a função calcSumParcelas que já implementa a convenção Conkey corretamente
+  const custoConsorcio = calcSumParcelas(parcReducaoParcela, prazo);
 
   // === FINANCIAMENTO (auto-preenche imóvel = creditoAtualizado, entrada = lance próprios) ===
   const finImovelEl = document.getElementById('finImovel');
@@ -630,9 +620,11 @@ function recalc(){
   // Custo Financiamento = soma das parcelas (com tarifa+TR+MIP+DFI)
   const custoFinanciamento = cron2.sumP;
 
-  // Auto-preencher prazo investimento com prazo do consórcio
+  // Prazo investimento ESPELHA o prazo do consórcio (a menos que user esteja editando)
   const invPrazoEl = document.getElementById('invPrazo');
-  if(document.activeElement?.id !== 'invPrazo' && (!invPrazoEl.value || invPrazoEl.value === '0')) invPrazoEl.value = prazo;
+  if(document.activeElement?.id !== 'invPrazo' && invPrazoEl.dataset.userEdited !== '1') {
+    invPrazoEl.value = prazo;
+  }
 
   // Investimento da diferença Consórcio vs Financiamento (Conkey-style)
   // Capital = sum de diferenças mensais POSITIVAS (parcela_financ - parcela_consórcio mês a mês)
