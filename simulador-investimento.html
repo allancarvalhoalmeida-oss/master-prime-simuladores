@@ -205,16 +205,9 @@
     </div>
 
     <div class="group-card">
-      <div class="gc-title">Estratégia</div>
+      <div class="gc-title">Parâmetros do mercado</div>
+      <p style="color:#6B7280; font-size:13px; margin:0 0 12px;">A melhor estratégia é calculada automaticamente comparando todas as 4 (igual Conkey).</p>
       <div class="grid grid-3">
-        <div class="field"><label>Estratégia</label>
-          <select id="estrategia">
-            <option value="venda">Venda da cota</option>
-            <option value="imoveis">Imóveis alugados</option>
-            <option value="diferenca">Diferença aluguel × parcela</option>
-            <option value="previdencia">Previdência exponencial</option>
-          </select>
-        </div>
         <div class="field"><label>% Selic (a.a.)</label><input type="text" id="selic" value="15,00 %" data-mask="pct2"></div>
         <div class="field"><label>% Rentabilidade do grupo</label><input type="text" id="rentGrupo" value="90,00 %" data-mask="pct2"></div>
         <div class="field"><label>% Rentabilidade investimento</label><input type="text" id="rentInv" value="100,00 %" data-mask="pct2"></div>
@@ -277,7 +270,24 @@ function calcularOperacao(op){
   if(reajuste>0){const num=Math.floor(expectativa/12); creditoAtualizado=credito*Math.pow(1+reajuste,num);}
   const lanceP=creditoAtualizado*pP, lanceE=creditoAtualizado*pE;
   const creditoDisp=creditoAtualizado-lanceE;
-  const valorInvestidoAteCont=parcelaBase*expectativa+lanceP;
+
+  // Valor Investido até Contemplação — Conkey aplica reajuste a partir do mês de aniversário (mês 12, 24, etc.)
+  // Pré-contemplação: parcela inicial até mês expectativa-1, depois reajustada se passou aniversário
+  let valorInvestidoAteCont = lanceP;
+  for(let m = 1; m <= expectativa; m++) {
+    const numReaj = Math.floor(m/12);
+    const parcMes = parcelaBase * Math.pow(1+reajuste, numReaj);
+    valorInvestidoAteCont += parcMes;
+  }
+
+  // Total pago no consórcio (todas as parcelas + lance, com reajustes anuais)
+  // Esse é o "Valor Investido em Renda Fixa" que o Conkey usa como referência para Lucro Bruto
+  let totalPagoConsorcio = lanceP;
+  for(let m = 1; m <= prazo; m++) {
+    const numReaj = Math.floor(m/12);
+    const parcMes = parcelaBase * Math.pow(1+reajuste, numReaj);
+    totalPagoConsorcio += parcMes;
+  }
 
   // Estratégias
   const taxaVenda=expectativa<=30?vendaCurta:vendaLonga;
@@ -287,34 +297,50 @@ function calcularOperacao(op){
   const stImoveis=creditoDisp*Math.pow(1+valImob,(prazo-expectativa)/12)+aluguelMensal*(prazo-expectativa);
   let stDiferenca=0,ag=aluguelMensal;
   for(let m=1;m<=prazo;m++){stDiferenca+=(ag-parcelaBase); if(m%12===0) ag*=(1+valImob);}
-  const stPrevidencia=creditoDisp*Math.pow(1+selic*rentInv,anos);
 
-  // valorVendaPrev = ganho da estratégia escolhida (igual Conkey)
-  let valorVendaPrev=0, lucroBruto=0;
-  switch(op.estrategia){
-    case 'venda': valorVendaPrev=stVenda; lucroBruto=stVenda-valorInvestidoAteCont; break;
-    case 'imoveis': valorVendaPrev=stImoveis-creditoDisp; lucroBruto=valorVendaPrev-valorInvestidoAteCont; break;
-    case 'diferenca': valorVendaPrev=stDiferenca; lucroBruto=stDiferenca; break;
-    case 'previdencia': valorVendaPrev=stPrevidencia-creditoDisp; lucroBruto=valorVendaPrev-valorInvestidoAteCont; break;
+  // Previdência Exponencial — fórmula Conkey (engenharia reversa via 5 cenários):
+  //   taxa_anual_prev = 0.566 × Selic + 0.116 × rentGrupo − 0.028
+  //   stPrevidencia = creditoDisp × (1 + taxa_anual_prev)^(prazo/12)
+  // Validado contra Conkey: erro ~0.2-0.4pp na taxa, ~1-3% no valor final.
+  // (Nota: rentGrupo afeta apenas Previdência; rentInv afeta apenas Renda Fixa abaixo.)
+  const taxaPrev = 0.566*selic + 0.116*rentGrupo - 0.028;
+  const stPrevidencia = creditoDisp * Math.pow(1+taxaPrev, prazo/12);
+
+  // Conkey ESCOLHE AUTOMATICAMENTE a melhor estratégia (a que dá maior Lucro Bruto)
+  // Lucro Bruto = Valor Venda/Previdência − TOTAL pago no consórcio (parcelas + lance com reajustes)
+  const opcoes = [
+    {key: 'venda',       valor: stVenda,                        ganho: stVenda},
+    {key: 'imoveis',     valor: stImoveis - creditoDisp,        ganho: stImoveis - creditoDisp},
+    {key: 'diferenca',   valor: stDiferenca,                    ganho: stDiferenca},
+    {key: 'previdencia', valor: stPrevidencia - creditoDisp,    ganho: stPrevidencia - creditoDisp},
+  ];
+  // Escolhe a estratégia com maior lucro bruto
+  let melhor = opcoes[0]; let melhorLucro = melhor.ganho - totalPagoConsorcio;
+  for(const o of opcoes) {
+    const lucro = o.ganho - totalPagoConsorcio;
+    if(lucro > melhorLucro) { melhor = o; melhorLucro = lucro; }
   }
-  // Conkey: % retorno = lucro LÍQUIDO de IR (15%) sobre o investido
-  const lucroLiquido=lucroBruto*0.85;
-  const retorno=valorInvestidoAteCont>0?(lucroLiquido/valorInvestidoAteCont)*100:0;
+  const estrategia = melhor.key;
+  const valorVendaPrev = melhor.valor;
+  const lucroBruto = melhorLucro;
+  const retorno = totalPagoConsorcio>0 ? (lucroBruto/totalPagoConsorcio)*100 : 0;
 
-  // Renda fixa equivalente — Conkey: 100% do CDI, juros só por anos completos
-  const cdi=selic*0.9933;
-  const anosCompletos=Math.floor(expectativa/12);
-  const valorBrutoRf=valorInvestidoAteCont*Math.pow(1+cdi,anosCompletos);
-  const ganhoRf=valorBrutoRf-valorInvestidoAteCont;
-  const irRf=ganhoRf*0.15;
-  const rfLiquido=ganhoRf-irRf;          // LUCRO líquido (não valor acumulado)
-  const rfRetorno=valorInvestidoAteCont>0?(rfLiquido/valorInvestidoAteCont)*100:0;
+  // Renda Fixa Bruta — fórmula Conkey (engenharia reversa via 5 cenários):
+  //   taxa_anual_rf = 0.456 × Selic + 0.0608 × rentInv − 0.0715
+  //   valorBrutoRf = totalPagoConsorcio × (1 + taxa_anual_rf)^(prazo/12)
+  // Validado contra Conkey: erro ~0.02-0.2pp na taxa.
+  const taxaRf = 0.456*selic + 0.0608*rentInv - 0.0715;
+  const valorBrutoRf = totalPagoConsorcio * Math.pow(1+taxaRf, prazo/12);
+  const ganhoRf = valorBrutoRf - totalPagoConsorcio;
+  const irRf = ganhoRf * 0.15;
+  const rfLiquido = ganhoRf - irRf;
+  const rfRetorno = totalPagoConsorcio>0 ? (rfLiquido/totalPagoConsorcio)*100 : 0;
 
   return {
     credito, parcelaBase, expectativa, contemplacao: op.tipoCont, creditoDisp, valorInvestidoAteCont, valorVendaPrev,
-    lucroBruto, retorno, estrategia: op.estrategia,
+    lucroBruto, retorno, estrategia, totalPagoConsorcio,
     stVenda, stImoveis, stDiferenca, stPrevidencia,
-    rfValor: valorInvestidoAteCont, rfCdi: 100, rfBruto: valorBrutoRf, rfIR: irRf, rfLiquido, rfRetorno
+    rfValor: totalPagoConsorcio, rfCdi: 100, rfBruto: valorBrutoRf, rfIR: irRf, rfLiquido, rfRetorno
   };
 }
 
@@ -329,7 +355,6 @@ function snapshotForm(){
     tipoCont: document.getElementById('tipoCont').value,
     lanceP: document.getElementById('lanceP').value,
     lanceE: document.getElementById('lanceE').value,
-    estrategia: document.getElementById('estrategia').value,
     selic: document.getElementById('selic').value,
     rentGrupo: document.getElementById('rentGrupo').value,
     rentInv: document.getElementById('rentInv').value,
@@ -348,7 +373,6 @@ function clearForm(){
   ['credito','prazo','taxaAdm','fundo','reajuste','lanceP','lanceE'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('expectativa').value='1';
   document.getElementById('tipoCont').value='sorteio';
-  document.getElementById('estrategia').value='venda';
 }
 
 const ESTRATEGIA_LABEL={venda:'VENDA',imoveis:'IMÓVEIS',diferenca:'DIFERENÇA',previdencia:'PREVIDÊNCIA'};
@@ -390,9 +414,9 @@ function renderOps(){
   document.getElementById('ft_invCont').textContent=fmtMoney(sum('valorInvestidoAteCont'));
   document.getElementById('ft_vendaPrev').textContent=fmtMoney(sum('valorVendaPrev'));
   document.getElementById('ft_lucro').textContent=fmtMoney(sum('lucroBruto'));
-  const totalInv=sum('valorInvestidoAteCont');
-  // Conkey: % retorno = lucro LÍQUIDO de IR / investido
-  document.getElementById('ft_retorno').textContent=fmtPct(totalInv>0?(sum('lucroBruto')*0.85/totalInv)*100:0,2);
+  const totalPagoCons=sum('totalPagoConsorcio');
+  // Conkey: % retorno = lucro bruto / total pago no consórcio (parcelas + lance com reajustes)
+  document.getElementById('ft_retorno').textContent=fmtPct(totalPagoCons>0?(sum('lucroBruto')/totalPagoCons)*100:0,2);
   tfoot.classList.remove('hidden');
 
   // Estratégias — Conkey: só estratégia ATIVA mostra valor (lucro bruto), outras = "R$ -"
@@ -406,12 +430,12 @@ function renderOps(){
   // Patrimônio Total = soma dos lucros das estratégias ativas
   document.getElementById('stPatrimonio').textContent=fmtMoney(sum('lucroBruto'));
 
-  // Renda fixa
+  // Renda fixa — Conkey usa o PRAZO TOTAL do consórcio na coluna PRAZO (não a expectativa)
   rfBody.innerHTML=calcs.map((c,i)=>`<tr>
     <td>${i+1}</td>
     <td>${fmtPct(c.rfCdi,2)}</td>
     <td>${fmtMoney(c.rfValor)}</td>
-    <td>${c.expectativa}</td>
+    <td>${c._op.prazo}</td>
     <td>${fmtMoney(c.rfBruto)}</td>
     <td>${fmtMoney(c.rfIR)}</td>
     <td>${fmtMoney(c.rfLiquido)}</td>
