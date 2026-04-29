@@ -305,14 +305,34 @@ function calcularProposta(p){
   const saldoApos=Math.max(0,saldo-lanceTotal);
   const prazoRest=Math.max(0,prazo-expectativa);
   const pcSemAd=prazoRest>0?saldoApos/prazoRest:0;
-  const pcAd=pcSemAd+adesaoMensal+seguroMensal;
+  // Parcela "com adesão" só faz sentido durante o período de adesão; quando desligada => R$ 0,00 (igual Conkey)
+  const pcAd=(adesaoOn && adesao>0 && prazoAdesao>0)?pcSemAd+adesaoMensal+seguroMensal:0;
 
-  const custoOp=parcelaInicial*Math.min(prazoAdesao||0,expectativa)+demaisParcelas*Math.max(0,expectativa-(prazoAdesao||0))+pcAd*prazoRest+lanceP;
+  // Custo da Operação = soma de TODAS as parcelas ao longo do prazo, com reajustes
+  // periódicos aplicados a cada `period` meses (anual=12, semestral=6, mensal=1).
+  let custoOp=0;
+  let parcSimul=parcComRedutor;
+  let creditoSimul=credito;
+  let saldoSimul=totalDevido;
+  for(let m=1;m<=prazo;m++){
+    let parcMes=parcSimul;
+    if(seguroOn) parcMes+=creditoSimul*seguro;
+    if(adesaoOn && adesao>0 && prazoAdesao>0 && m<=prazoAdesao) parcMes+=adesaoMensal;
+    custoOp+=parcMes;
+    if(reajuste>0 && tipoReajuste && m%period===0){
+      parcSimul*=(1+reajuste);
+      creditoSimul*=(1+reajuste);
+      saldoSimul*=(1+reajuste);
+    }
+  }
+  custoOp+=lanceP;  // lance de recursos próprios entra no custo total
 
   let cetM=0,cetA=0,cetT=0;
+  // Para o CET, usar a parcela pós-contemplação (pcSemAd) como referência do fluxo restante
+  const parcCet=pcSemAd>0?pcSemAd:demaisParcelas;
   if(prazoRest>0 && creditoDisp>0){
     const fluxos=[creditoDisp-lanceP];
-    for(let i=0;i<prazoRest;i++) fluxos.push(-pcAd);
+    for(let i=0;i<prazoRest;i++) fluxos.push(-parcCet);
     cetM=calcularTIR(fluxos)*100;
     cetA=(Math.pow(1+cetM/100,12)-1)*100;
   }
