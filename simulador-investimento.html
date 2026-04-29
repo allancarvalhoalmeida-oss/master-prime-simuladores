@@ -383,8 +383,11 @@ function calcularOperacao(op){
   return {
     credito, parcelaBase, expectativa, contemplacao: op.tipoCont, creditoDisp, valorInvestidoAteCont, valorVendaPrev,
     lucroBruto, retorno, estrategia, totalPagoConsorcio,
-    // Lucros individuais de cada estratégia (para os cards mostrarem só os positivos)
-    lucroVenda, lucroImoveis: lucroImoveisCard, lucroDiferenca, lucroPrevidencia,
+    // Lucros individuais para os cards: visível só quando lucro_escolha > 0 (Conkey)
+    lucroVenda,
+    lucroImoveis,                   // lucro_escolha (decide se mostra card)
+    lucroImoveisCard,               // valor exibido quando card é mostrado
+    lucroDiferenca, lucroPrevidencia,
     rfValor: aporteRf, rfCdi: 100, rfPrazo: prazoRf, rfBruto: valorBrutoRf, rfIR: irRf, rfLiquido, rfRetorno
   };
 }
@@ -507,12 +510,13 @@ function renderOps(){
   document.getElementById('ft_retorno').textContent=fmtPct(totalAporte>0?(sum('lucroBruto')/totalAporte)*100:0,2);
   tfoot.classList.remove('hidden');
 
-  // Estratégias — Conkey: somar lucro POSITIVO de cada estratégia em todas as operações
-  // Mostra o card só se o total da estratégia é positivo, senão "R$ -"
+  // Estratégias — Conkey: card só mostra se LUCRO DE ESCOLHA é positivo (não card_value isolado)
+  // Para Imóveis, lucro_escolha = stImoveis - totalPagoConsorcio (geralmente negativo)
+  // O VALOR mostrado no card de Imóveis = lucroImoveisCard (= stImoveis)
   const totalPorEstr = {venda:0, imoveis:0, diferenca:0, previdencia:0};
   calcs.forEach(c => {
     if(c.lucroVenda > 0)        totalPorEstr.venda += c.lucroVenda;
-    if(c.lucroImoveis > 0)      totalPorEstr.imoveis += c.lucroImoveis;
+    if(c.lucroImoveis > 0)      totalPorEstr.imoveis += c.lucroImoveisCard;  // mostra card_value, mas só se escolha é positiva
     if(c.lucroDiferenca > 0)    totalPorEstr.diferenca += c.lucroDiferenca;
     if(c.lucroPrevidencia > 0)  totalPorEstr.previdencia += c.lucroPrevidencia;
   });
