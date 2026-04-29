@@ -784,18 +784,30 @@ document.getElementById('baixarPdf').addEventListener('click', () => {
 
   // Mostra temporariamente, gera PDF, esconde
   const report = document.getElementById('pdfReport');
+  // posicionamento que o html2canvas consegue capturar (no topo, sobre o resto)
   report.style.display = 'block';
+  report.style.position = 'absolute';
+  report.style.top = '0';
   report.style.left = '0';
-  html2pdf().set({
-    margin: 0,
-    filename: `simulacao-operacao-simples-${dd}${mm}${yyyy}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#FFFFFF' },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  }).from(report).save().then(() => {
-    report.style.display = 'none';
-    report.style.left = '-9999px';
-  });
+  report.style.zIndex = '99999';
+  // delay pra garantir reflow antes do html2canvas medir
+  setTimeout(() => {
+    const w = report.scrollWidth || 794;
+    const h = report.scrollHeight || 1123;
+    html2pdf().set({
+      margin: 0,
+      filename: `master-prime-operacao-simples-${dd}${mm}${yyyy}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#FFFFFF', width: w, height: h, windowWidth: w, windowHeight: h },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(report).save().then(() => {
+      report.style.display = 'none';
+      report.style.position = 'absolute';
+      report.style.top = '';
+      report.style.left = '-9999px';
+      report.style.zIndex = '';
+    });
+  }, 100);
 });
 </script>
 
