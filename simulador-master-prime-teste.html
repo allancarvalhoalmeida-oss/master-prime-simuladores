@@ -626,9 +626,14 @@ function recalc() {
   document.getElementById('valorRef').value = formatMoney(valorRef);
 
   // === LANCES ===
-  const lanceProprios_v = valorRef * pProprios;
+  // Conkey "Categoria (Total) e Carta (Emb.)":
+  //   - Lance Próprios = % × Categoria Total (= Crédito Atualizado × (1 + 2 × (adm + FR)))
+  //   - Lance Embutido = % × Carta (= Crédito Atualizado)
+  //   - Lance FGTS = % × Valor de Referência (sempre)
+  const categoriaTotal = creditoAtualizado * (1 + 2 * (taxaAdm + fundo));
+  const lanceProprios_v = (tipoLance === 'cat-carta') ? categoriaTotal * pProprios : valorRef * pProprios;
   const lanceEmbutido_v = (tipoLance === 'cat-carta') ? creditoAtualizado * pEmbutido : valorRef * pEmbutido;
-  const lanceFGTS_v = (tipoLance === 'cat-carta') ? creditoAtualizado * pFGTS : valorRef * pFGTS;
+  const lanceFGTS_v = valorRef * pFGTS;  // FGTS sempre sobre VR
   const valorTotalLance = lanceProprios_v + lanceEmbutido_v + lanceFGTS_v;
   const totalLancePct = pProprios + pEmbutido + pFGTS;
 
@@ -662,13 +667,15 @@ function recalc() {
   const parcReducaoPrazo = parcelaAtualNoMomento;
   const novoPrazoReducao = parcReducaoPrazo > 0 ? Math.ceil(saldoApoLance / parcReducaoPrazo) : 0;
 
-  // Custo efetivo via TIR
+  // Custo efetivo via TIR — fluxo do cliente:
+  //   Mês 0: recebe crédito disponível (entrada) - lance recursos próprios pago (saída)
+  //   Mês 1+: paga parcela (saída)
   function calcCustoEfetivo(parcelaPos, prazoTotalPos) {
     if (prazoTotalPos === 0 || creditoDisp <= 0) return { mensal: 0, anual: 0 };
     const fluxos = [];
-    fluxos.push(creditoDisp - valorTotalLance);
+    fluxos.push(creditoDisp - lanceProprios_v);  // só lance próprios sai do bolso, embutido/FGTS não
     for (let m = 1; m <= prazoTotalPos; m++) fluxos.push(-parcelaPos);
-    if (Math.abs(fluxos.reduce((a,b)=>a+b,0)) < 0.01) return {mensal:0, anual:0};
+    if (fluxos[0] <= 0) return {mensal:0, anual:0};
     const tir = calcularTIR(fluxos, 0.005);
     if (!isFinite(tir) || isNaN(tir)) return {mensal: 0, anual: 0};
     return { mensal: tir, anual: Math.pow(1 + tir, 12) - 1 };

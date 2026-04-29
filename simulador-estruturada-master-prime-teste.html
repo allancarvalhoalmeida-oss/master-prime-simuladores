@@ -653,16 +653,15 @@ function recalc() {
   document.getElementById('reducaoPrazo_parc').textContent = formatMoney(parcReducaoPrazo);
   document.getElementById('reducaoPrazo_prazo').textContent = novoPrazoReducao;
 
-  // CET (TIR mensal e anual)
-  function cetTIR(parcela, prazoRest) {
-    if (prazoRest <= 0 || creditoDisp <= 0) return { mensal: 0, anual: 0 };
-    const fluxos = [creditoDisp - valorTotalLance];
-    for (let i=0; i<prazoRest; i++) fluxos.push(-parcela);
-    const cm = calcularTIR(fluxos);
+  // CET — fórmula Conkey Op. Estruturada: reajuste anual / prazo total (em meses)
+  // Ex: reajuste 5% e prazo 100m → CET mensal = 0,05% (validado contra Conkey)
+  function cetEstruturada(prazoTotal) {
+    if (prazoTotal <= 0) return { mensal: 0, anual: 0 };
+    const cm = reajuste / prazoTotal;
     return { mensal: cm*100, anual: (Math.pow(1+cm,12)-1)*100 };
   }
-  const cetA = cetTIR(parcReducaoParcela, prazoRestante);
-  const cetB = cetTIR(parcReducaoPrazo, novoPrazoReducao);
+  const cetA = cetEstruturada(prazo);
+  const cetB = cetEstruturada(prazo);  // mesma fórmula para ambos cenários
   document.getElementById('reducaoParcela_cm').textContent = formatPct(cetA.mensal, 2);
   document.getElementById('reducaoParcela_ca').textContent = formatPct(cetA.anual, 2);
   document.getElementById('reducaoPrazo_cm').textContent = formatPct(cetB.mensal, 2);
@@ -853,7 +852,9 @@ function renderOps() {
   const prazoMed = sumTotal>0 ? Math.round(wPrazo/sumTotal) : 0;
   const restMed = sumTotal>0 ? Math.round(wRest/sumTotal) : 0;
   const cetMensalMed = sumTotal>0 ? cetMensalAcc/sumTotal : 0;
-  const cetAnualMed = sumTotal>0 ? cetAnualAcc/sumTotal : 0;
+  // Conkey: anual é capitalização do mensal médio (não média dos anuais),
+  // garante consistência (1+CET_m)^12 = 1+CET_a
+  const cetAnualMed = (Math.pow(1+cetMensalMed/100, 12) - 1) * 100;
 
   document.getElementById('ft_adm').textContent = formatPct(admMed, 2);
   document.getElementById('ft_fr').textContent = formatPct(frMed, 2);

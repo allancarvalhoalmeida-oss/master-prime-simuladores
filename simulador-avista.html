@@ -96,8 +96,12 @@
       <div class="grid grid-4">
         <div class="field"><label>Tipo de contemplação</label><select id="tipoCont"><option value="sorteio">Sorteio</option><option value="lance">Lance</option></select></div>
         <div class="field"><label>Expectativa (meses)</label><input type="text" id="expectativa" value="1" data-mask="int"></div>
+        <div class="field"><label>Tipo de lance</label><select id="tipoLance" disabled><option value="">Selecione</option><option value="carta">Carta de crédito</option><option value="categoria">Categoria</option><option value="cat-carta">Categoria (Total) e Carta (Emb.)</option><option value="saldo">Saldo devedor</option></select></div>
+        <div class="field"><label>Crédito atualizado</label><input type="text" id="creditoAtualizado" placeholder="R$ 0,00" disabled></div>
         <div class="field"><label>% Lance rec. próprios</label><input type="text" id="lanceP" placeholder="0,0000 %" data-mask="pct4" disabled></div>
-        <div class="field"><label>Lance rec. próprios</label><input type="text" id="lanceP_v" placeholder="R$ 0,00" disabled></div>
+        <div class="field"><label>% Lance embutido</label><input type="text" id="lanceE" placeholder="0,0000 %" data-mask="pct4" disabled></div>
+        <div class="field"><label>% Lance FGTS <span class="toggle-input"><input type="checkbox" id="fgtsOn"><span class="toggle-slider"></span></span></label><input type="text" id="lanceF" placeholder="0,0000 %" data-mask="pct4" disabled></div>
+        <div class="field"><label>Lance total</label><input type="text" id="lanceTotal_v" placeholder="R$ 0,00" disabled></div>
       </div>
     </div>
   </section>
@@ -110,7 +114,7 @@
       <div class="field"><label>Aportes mensais</label><input type="text" id="aportes" placeholder="R$ 0,00" data-mask="money"></div>
       <div class="field"><label>Período aplicação (meses)</label><input type="text" id="periodo" placeholder="0" data-mask="int"></div>
       <div class="field"><label>% Taxa Selic (a.a.)</label><input type="text" id="selic" value="15,00 %" data-mask="pct2"></div>
-      <div class="field"><label>% CDI (sobre Selic)</label><input type="text" id="cdiPct" value="99,33 %" data-mask="pct2"></div>
+      <div class="field"><label>% CDI (sobre Selic)</label><input type="text" id="cdiPct" value="99,3333 %" data-mask="pct4"></div>
       <div class="field"><label>% Rentabilidade CDI</label><input type="text" id="rentCdi" value="100,00 %" data-mask="pct2"></div>
       <div class="field"><label>% Valorização do bem (a.a.)</label><input type="text" id="valorizacao" value="6,39 %" data-mask="pct2"></div>
     </div>
@@ -168,7 +172,15 @@ document.querySelectorAll('select').forEach(el=>el.addEventListener('change',rec
 document.getElementById('tipoCont').addEventListener('change',e=>{
   const isLance=e.target.value==='lance';
   document.getElementById('lanceP').disabled=!isLance;
-  if(!isLance) document.getElementById('lanceP').value='';
+  document.getElementById('lanceE').disabled=!isLance;
+  document.getElementById('tipoLance').disabled=!isLance;
+  if(!isLance){document.getElementById('lanceP').value=''; document.getElementById('lanceE').value='';}
+  if(isLance && !document.getElementById('tipoLance').value) document.getElementById('tipoLance').value='carta';
+  recalc();
+});
+document.getElementById('fgtsOn').addEventListener('change',e=>{
+  document.getElementById('lanceF').disabled=!e.target.checked;
+  if(!e.target.checked) document.getElementById('lanceF').value='';
   recalc();
 });
 
@@ -181,7 +193,11 @@ function recalc(){
   const reajuste=unmaskPct(document.getElementById('reajuste').value)/100;
   const expectativa=parseInt(document.getElementById('expectativa').value||'1',10);
   const tipoCont=document.getElementById('tipoCont').value;
+  const tipoLance=document.getElementById('tipoLance').value;
   const pP=tipoCont==='lance'?unmaskPct(document.getElementById('lanceP').value)/100:0;
+  const pE=tipoCont==='lance'?unmaskPct(document.getElementById('lanceE').value)/100:0;
+  const fgtsOn=document.getElementById('fgtsOn').checked;
+  const pF=fgtsOn?unmaskPct(document.getElementById('lanceF').value)/100:0;
 
   const totalDevido=credito*(1+taxaAdm+fundo);
   const parcelaBase=prazo>0?totalDevido/prazo:0;
@@ -189,8 +205,17 @@ function recalc(){
 
   let creditoAtualizado=credito;
   if(reajuste>0 && tipoReajuste){const period=tipoReajuste.endsWith('-anual')?12:tipoReajuste.endsWith('-semestral')?6:1; const num=Math.floor(expectativa/period); creditoAtualizado=credito*Math.pow(1+reajuste,num);}
-  const lanceProprios_v=creditoAtualizado*pP;
-  document.getElementById('lanceP_v').value=fmtMoney(lanceProprios_v);
+  document.getElementById('creditoAtualizado').value=fmtMoney(creditoAtualizado);
+
+  // Conkey: VR e Categoria Total dependem do tipo de lance
+  let valorRef=creditoAtualizado;
+  if(tipoLance==='categoria' || tipoLance==='cat-carta') valorRef=creditoAtualizado*(1+taxaAdm+fundo);
+  const categoriaTotal=creditoAtualizado*(1+2*(taxaAdm+fundo));
+  const lanceProprios_v=(tipoLance==='cat-carta')?categoriaTotal*pP:valorRef*pP;
+  const lanceEmbutido_v=(tipoLance==='cat-carta')?creditoAtualizado*pE:valorRef*pE;
+  const lanceFGTS_v=valorRef*pF;
+  const valorTotalLance=lanceProprios_v+lanceEmbutido_v+lanceFGTS_v;
+  document.getElementById('lanceTotal_v').value=fmtMoney(valorTotalLance);
 
   // Investimento
   const investimento=unmaskMoney(document.getElementById('investimento').value);
@@ -201,7 +226,14 @@ function recalc(){
   const rentCdi=unmaskPct(document.getElementById('rentCdi').value)/100;
   const valorizacao=unmaskPct(document.getElementById('valorizacao').value)/100;
 
-  const taxaInvestAA=selic*cdiPct*rentCdi;
+  // Conkey define o CDI como Selic - 0,10pp; quando cdiPct ≈ 99,33%, usar a relação
+  // exata (selic - 0,001) para evitar erro de arredondamento na precisão decimal.
+  let taxaInvestAA;
+  if(Math.abs(cdiPct-0.9933)<0.001 || Math.abs(cdiPct-0.99333)<0.0005 || Math.abs(cdiPct-0.993333)<0.00005){
+    taxaInvestAA=(selic-0.001)*rentCdi;
+  } else {
+    taxaInvestAA=selic*cdiPct*rentCdi;
+  }
   const taxaInvestMensal=Math.pow(1+taxaInvestAA,1/12)-1;
   const anos=periodo/12;
 

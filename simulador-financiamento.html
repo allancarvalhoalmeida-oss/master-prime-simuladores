@@ -115,10 +115,11 @@
       <div class="grid grid-4">
         <div class="field"><label>Tipo de contemplação</label><select id="tipoContemplacao"><option value="">Selecione</option><option value="sorteio">Sorteio</option><option value="lance">Lance</option></select></div>
         <div class="field"><label>Expectativa (meses)</label><input type="text" id="expectativa" value="1" data-mask="int"></div>
-        <div class="field"><label>Tipo de lance</label><select id="tipoLance" disabled><option value="">Selecione</option><option value="carta">Carta de crédito</option><option value="categoria">Categoria</option><option value="saldo">Saldo devedor</option></select></div>
+        <div class="field"><label>Tipo de lance</label><select id="tipoLance" disabled><option value="">Selecione</option><option value="carta">Carta de crédito</option><option value="categoria">Categoria</option><option value="cat-carta">Categoria (Total) e Carta (Emb.)</option><option value="saldo">Saldo devedor</option></select></div>
         <div class="field"><label>Crédito atualizado</label><input type="text" id="creditoAtualizado" placeholder="R$ 0,00" disabled></div>
         <div class="field"><label>% Lance rec. próprios</label><input type="text" id="lanceProprios" placeholder="0,0000 %" data-mask="pct4" disabled></div>
         <div class="field"><label>% Lance embutido</label><input type="text" id="lanceEmbutido" placeholder="0,0000 %" data-mask="pct4" disabled></div>
+        <div class="field"><label>% Lance FGTS <span class="toggle-input"><input type="checkbox" id="fgtsOn"><span class="toggle-slider"></span></span></label><input type="text" id="lanceFGTS" placeholder="0,0000 %" data-mask="pct4" disabled></div>
         <div class="field"><label>Lance total</label><input type="text" id="totalLance" placeholder="0,0000 %" disabled></div>
         <div class="field"><label>Crédito disponível</label><input type="text" id="creditoDisp" placeholder="R$ 0,00" disabled></div>
       </div>
@@ -232,6 +233,7 @@ function setupToggle(toggleId, ...inputs){
 setupToggle('seguroOn','seguro');
 setupToggle('redutorOn','redutor');
 setupToggle('adesaoOn','adesao');
+setupToggle('fgtsOn','lanceFGTS');
 
 document.getElementById('tipoContemplacao').addEventListener('change', e => {
   const isLance = e.target.value === 'lance';
@@ -259,6 +261,8 @@ function recalc(){
   const tipoLance = document.getElementById('tipoLance').value;
   const pP = unmaskPct(document.getElementById('lanceProprios').value)/100;
   const pE = unmaskPct(document.getElementById('lanceEmbutido').value)/100;
+  const fgtsOn = document.getElementById('fgtsOn').checked;
+  const pF = fgtsOn ? unmaskPct(document.getElementById('lanceFGTS').value)/100 : 0;
 
   const period = tipoReajuste ? (tipoReajuste.endsWith('-anual') ? 12 : tipoReajuste.endsWith('-semestral') ? 6 : 1) : 12;
   const totalDevido = credito*(1+taxaAdm+fundo);
@@ -282,14 +286,17 @@ function recalc(){
   saldo = Math.max(0, saldo);
 
   let valorRef = creditoAtualizado;
-  if(tipoLance === 'categoria') valorRef = creditoAtualizado*(1+taxaAdm+fundo);
+  if(tipoLance === 'categoria' || tipoLance === 'cat-carta') valorRef = creditoAtualizado*(1+taxaAdm+fundo);
   else if(tipoLance === 'saldo') valorRef = saldo;
-  const lanceP = valorRef*pP, lanceE = valorRef*pE;
-  const lanceTotal = lanceP + lanceE;
-  document.getElementById('totalLance').value = fmtPct((pP+pE)*100, 4);
+  const categoriaTotal = creditoAtualizado*(1+2*(taxaAdm+fundo));
+  const lanceP = (tipoLance === 'cat-carta') ? categoriaTotal*pP : valorRef*pP;
+  const lanceE = (tipoLance === 'cat-carta') ? creditoAtualizado*pE : valorRef*pE;
+  const lanceF = valorRef*pF;
+  const lanceTotal = lanceP + lanceE + lanceF;
+  document.getElementById('totalLance').value = fmtPct((pP+pE+pF)*100, 4);
 
   let creditoDisp = creditoAtualizado;
-  if(tipoLance === 'categoria' || tipoLance === 'carta') creditoDisp -= lanceE;
+  if(tipoLance === 'categoria' || tipoLance === 'carta' || tipoLance === 'cat-carta') creditoDisp -= lanceE + lanceF;
   document.getElementById('creditoDisp').value = fmtMoney(creditoDisp);
 
   const saldoApos = Math.max(0, saldo - lanceTotal);
@@ -320,29 +327,37 @@ function recalc(){
   const iMensal = Math.pow(1+finJuros, 1/12) - 1;
   const trMensal = Math.pow(1+finTR, 1/12) - 1;
 
+  // Conkey inclui MIP+DFI calculado sobre o saldo INICIAL e mantém o mesmo valor em
+  // todas as parcelas (não decrescente como o saldo SAC).
   let parcInicial = 0, parcFinal = 0;
+  const seguroFixo = (finMIP+finDFI) * finFinanciado;
   if(finFinanciado > 0 && finPrazo > 0){
     if(finTipo === 'sac'){
       const amort = finFinanciado/finPrazo;
-      parcInicial = amort + finFinanciado*iMensal;
-      parcFinal = amort + amort*iMensal;
+      parcInicial = amort + finFinanciado*iMensal + seguroFixo;
+      parcFinal = amort + amort*iMensal + seguroFixo;
     } else {
       const p = (finFinanciado*iMensal)/(1-Math.pow(1+iMensal,-finPrazo));
-      parcInicial = parcFinal = p;
+      parcInicial = p + seguroFixo;
+      parcFinal = p + seguroFixo;
     }
   }
-  const seguroFinIni = (finMIP+finDFI) * finFinanciado;
-  document.getElementById('finParcInicial').value = fmtMoney(parcInicial);
-  document.getElementById('finParcFinal').value = fmtMoney(parcFinal);
-  document.getElementById('finParcInicialT').value = fmtMoney(parcInicial + finTarifa + seguroFinIni);
-  document.getElementById('finParcFinalT').value = fmtMoney(parcFinal + finTarifa);
+  // Conkey: "Parcela + Tarifa + TR" = parcela base + tarifa + TR sobre saldo daquele mês
+  // (saldo inicial = finFinanciado, saldo final = amort no SAC, ou finFinanciado no Price)
+  const saldoFinalSAC = finTipo === 'sac' ? (finFinanciado/finPrazo) : finFinanciado;
+  document.getElementById('finParcInicial').textContent = fmtMoney(parcInicial);
+  document.getElementById('finParcFinal').textContent = fmtMoney(parcFinal);
+  document.getElementById('finParcInicialT').textContent = fmtMoney(parcInicial + finTarifa + finFinanciado*trMensal);
+  document.getElementById('finParcFinalT').textContent = fmtMoney(parcFinal + finTarifa + saldoFinalSAC*trMensal);
 
   // ============ RESULTADO ============
+  // Conkey: custo consórcio = soma das parcelas com reajustes anuais aplicados no aniversário (mês 12, 24...)
   let custoConsorcio = 0;
-  if(prazo > 0){
-    const parcelas = Array(prazo).fill(parcelaInicial);
-    custoConsorcio = parcelas.reduce((a,b)=>a+b, 0) + lanceP;
+  for(let m=1; m<=prazo; m++){
+    const fator = (reajuste>0 && tipoReajuste) ? Math.pow(1+reajuste, Math.floor(m/period)) : 1;
+    custoConsorcio += parcelaInicial * fator;
   }
+  custoConsorcio += lanceP;
   const custoFin = (parcInicial+parcFinal)/2 * finPrazo + finEntrada + (finTarifa*finPrazo);
   document.getElementById('resCustoConsorcio').textContent = fmtMoney(custoConsorcio);
   document.getElementById('resParcConsorcio').textContent = fmtMoney(redParcParc);

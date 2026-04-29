@@ -138,8 +138,8 @@
     </div>
     <div class="compare-row">
       <div class="label">Tipo de lance</div>
-      <div class="col"><select id="a_tipoLance" disabled><option value="">Selecione</option><option value="carta">Carta de crédito</option><option value="categoria">Categoria</option><option value="saldo">Saldo devedor</option></select></div>
-      <div class="col"><select id="b_tipoLance" disabled><option value="">Selecione</option><option value="carta">Carta de crédito</option><option value="categoria">Categoria</option><option value="saldo">Saldo devedor</option></select></div>
+      <div class="col"><select id="a_tipoLance" disabled><option value="">Selecione</option><option value="carta">Carta de crédito</option><option value="categoria">Categoria</option><option value="cat-carta">Categoria (Total) e Carta (Emb.)</option><option value="saldo">Saldo devedor</option></select></div>
+      <div class="col"><select id="b_tipoLance" disabled><option value="">Selecione</option><option value="carta">Carta de crédito</option><option value="categoria">Categoria</option><option value="cat-carta">Categoria (Total) e Carta (Emb.)</option><option value="saldo">Saldo devedor</option></select></div>
     </div>
     <div class="compare-row">
       <div class="label">% Lance rec. próprios</div>
@@ -150,6 +150,11 @@
       <div class="label">% Lance embutido</div>
       <div class="col"><input type="text" id="a_lanceE" placeholder="0,0000 %" data-mask="pct4" disabled></div>
       <div class="col"><input type="text" id="b_lanceE" placeholder="0,0000 %" data-mask="pct4" disabled></div>
+    </div>
+    <div class="compare-row">
+      <div class="label">% Lance FGTS</div>
+      <div class="col toggle-cell"><span class="toggle-input"><input type="checkbox" id="a_fgtsOn"><span class="toggle-slider"></span></span><input type="text" id="a_lanceF" placeholder="0,0000 %" data-mask="pct4" disabled></div>
+      <div class="col toggle-cell"><span class="toggle-input"><input type="checkbox" id="b_fgtsOn"><span class="toggle-slider"></span></span><input type="text" id="b_lanceF" placeholder="0,0000 %" data-mask="pct4" disabled></div>
     </div>
     <div class="compare-row">
       <div class="label">Lance total</div>
@@ -243,6 +248,7 @@ function setupToggle(prefix,toggleSuffix,fields){
   setupToggle(p,'seguroOn',['seguro']);
   setupToggle(p,'redutorOn',['redutor']);
   setupToggle(p,'adesaoOn',['adesao','prazoAdesao']);
+  setupToggle(p,'fgtsOn',['lanceF']);
   document.getElementById(p+'_tipoCont').addEventListener('change',e=>{
     const isLance=e.target.value==='lance', isAlgo=e.target.value!=='';
     document.getElementById(p+'_tipoLance').disabled=!isAlgo;
@@ -271,6 +277,8 @@ function calcularProposta(p){
   const tipoLance=document.getElementById(p+'_tipoLance').value;
   const pP=unmaskPct(document.getElementById(p+'_lanceP').value)/100;
   const pE=unmaskPct(document.getElementById(p+'_lanceE').value)/100;
+  const fgtsOn=document.getElementById(p+'_fgtsOn').checked;
+  const pF=fgtsOn?unmaskPct(document.getElementById(p+'_lanceF').value)/100:0;
 
   const period=tipoReajuste?(tipoReajuste.endsWith('-anual')?12:tipoReajuste.endsWith('-semestral')?6:1):12;
   const totalDevido=credito*(1+taxaAdm+fundo);
@@ -292,14 +300,19 @@ function calcularProposta(p){
   }
   saldo=Math.max(0,saldo);
 
+  // Conkey: VR = creditoAtualizado × (1 + adm + FR) (categoria), ou saldo, ou creditoAtualizado (carta)
   let valorRef=creditoAtualizado;
-  if(tipoLance==='categoria') valorRef=creditoAtualizado*(1+taxaAdm+fundo);
+  if(tipoLance==='categoria'||tipoLance==='cat-carta') valorRef=creditoAtualizado*(1+taxaAdm+fundo);
   else if(tipoLance==='saldo') valorRef=saldo;
-  const lanceP=valorRef*pP, lanceE=valorRef*pE;
-  const lanceTotal=lanceP+lanceE;
+  // Conkey: cat-carta = Lance Próprios sobre Categoria Total (= cred. atualizado × (1+2×(adm+FR)))
+  const categoriaTotal=creditoAtualizado*(1+2*(taxaAdm+fundo));
+  const lanceP=(tipoLance==='cat-carta')?categoriaTotal*pP:valorRef*pP;
+  const lanceE=(tipoLance==='cat-carta')?creditoAtualizado*pE:valorRef*pE;
+  const lanceF=valorRef*pF; // FGTS sempre sobre VR
+  const lanceTotal=lanceP+lanceE+lanceF;
 
   let creditoDisp=creditoAtualizado;
-  if(tipoLance==='categoria'||tipoLance==='carta') creditoDisp-=lanceE;
+  if(tipoLance==='categoria'||tipoLance==='carta'||tipoLance==='cat-carta') creditoDisp-=lanceE+lanceF;
   if(tipoLance==='saldo') creditoDisp=creditoAtualizado;
 
   const saldoApos=Math.max(0,saldo-lanceTotal);

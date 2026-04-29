@@ -84,7 +84,10 @@
       <div class="grid grid-3">
         <div class="field"><label>Tipo de contemplação</label><select id="tipoCont"><option value="sorteio">Sorteio</option><option value="lance">Lance</option></select></div>
         <div class="field"><label>Expectativa (meses)</label><input type="text" id="expectativa" value="1" data-mask="int"></div>
+        <div class="field"><label>Tipo de lance</label><select id="tipoLance" disabled><option value="">Selecione</option><option value="carta">Carta de crédito</option><option value="categoria">Categoria</option><option value="cat-carta">Categoria (Total) e Carta (Emb.)</option><option value="saldo">Saldo devedor</option></select></div>
         <div class="field"><label>% Lance rec. próprios</label><input type="text" id="lanceP" placeholder="0,0000 %" data-mask="pct4" disabled></div>
+        <div class="field"><label>% Lance embutido</label><input type="text" id="lanceE" placeholder="0,0000 %" data-mask="pct4" disabled></div>
+        <div class="field"><label>% Lance FGTS <span class="toggle-input"><input type="checkbox" id="fgtsOn"><span class="toggle-slider"></span></span></label><input type="text" id="lanceF" placeholder="0,0000 %" data-mask="pct4" disabled></div>
       </div>
     </div>
   </section>
@@ -183,7 +186,15 @@ document.querySelectorAll('select, input[type="checkbox"]').forEach(el=>el.addEv
 document.getElementById('tipoCont').addEventListener('change',e=>{
   const isLance=e.target.value==='lance';
   document.getElementById('lanceP').disabled=!isLance;
-  if(!isLance) document.getElementById('lanceP').value='';
+  document.getElementById('lanceE').disabled=!isLance;
+  document.getElementById('tipoLance').disabled=!isLance;
+  if(!isLance){document.getElementById('lanceP').value=''; document.getElementById('lanceE').value='';}
+  if(isLance && !document.getElementById('tipoLance').value) document.getElementById('tipoLance').value='carta';
+  recalc();
+});
+document.getElementById('fgtsOn').addEventListener('change',e=>{
+  document.getElementById('lanceF').disabled=!e.target.checked;
+  if(!e.target.checked) document.getElementById('lanceF').value='';
   recalc();
 });
 document.getElementById('invOn').addEventListener('change',e=>{
@@ -201,7 +212,11 @@ function recalc(){
   const reajuste=unmaskPct(document.getElementById('reajuste').value)/100;
   const expectativa=parseInt(document.getElementById('expectativa').value||'1',10);
   const tipoCont=document.getElementById('tipoCont').value;
+  const tipoLance=document.getElementById('tipoLance').value;
   const pP=tipoCont==='lance'?unmaskPct(document.getElementById('lanceP').value)/100:0;
+  const pE=tipoCont==='lance'?unmaskPct(document.getElementById('lanceE').value)/100:0;
+  const fgtsOn=document.getElementById('fgtsOn').checked;
+  const pF=fgtsOn?unmaskPct(document.getElementById('lanceF').value)/100:0;
 
   const totalDevido=credito*(1+taxaAdm+fundo);
   const parcelaBase=prazo>0?totalDevido/prazo:0;
@@ -209,6 +224,14 @@ function recalc(){
 
   let creditoAtualizado=credito;
   if(reajuste>0 && tipoReajuste){const period=tipoReajuste.endsWith('-anual')?12:tipoReajuste.endsWith('-semestral')?6:1; const num=Math.floor(expectativa/period); creditoAtualizado=credito*Math.pow(1+reajuste,num);}
+
+  // Lances Conkey
+  let valorRefL=creditoAtualizado;
+  if(tipoLance==='categoria'||tipoLance==='cat-carta') valorRefL=creditoAtualizado*(1+taxaAdm+fundo);
+  const categoriaTotal=creditoAtualizado*(1+2*(taxaAdm+fundo));
+  const lanceProprios=(tipoLance==='cat-carta')?categoriaTotal*pP:valorRefL*pP;
+  const lanceEmbutido=(tipoLance==='cat-carta')?creditoAtualizado*pE:valorRefL*pE;
+  const lanceFGTS=valorRefL*pF;
 
   // Imóvel
   const imValor=unmaskMoney(document.getElementById('imValor').value);
@@ -247,30 +270,46 @@ function recalc(){
   const alCorrecao=unmaskPct(document.getElementById('alCorrecao').value)/100;
   const alPct=imCompra>0?(alPrestacao/imCompra)*100:0;
   document.getElementById('alPct').value=fmtPct(alPct,2);
-  // Aluguel acumulado durante o prazo do consórcio (com correção anual)
-  let alguelAcum=0,alAtual=alPrestacao,parcelaAcum=0,parcelaAtual=parcelaBase;
+  // Conkey: diferença aluguel × parcela é calculada ano-a-ano pós-contemplação.
+  // Cada ano k tem aluguel = alPrestacao × (1+correção)^(k-1) e parcela média
+  // calculada com os meses REAIS daquele ano (último ano pode ter < 12 meses).
+  // A diferença mensal (aluguel - parcela média) é então multiplicada por 12
+  // (Conkey extrapola a anualização mesmo no último ano fracionário).
   let diferencaAcum=0,diferencaInvestida=0;
   const invOn=document.getElementById('invOn').checked;
   const invSelic=invOn?unmaskPct(document.getElementById('invSelic').value)/100:0;
   const invRent=invOn?unmaskPct(document.getElementById('invRent').value)/100:0;
   const invTaxa=invSelic*invRent*0.9933;
   const invMensal=Math.pow(1+invTaxa,1/12)-1;
-  for(let m=1;m<=prazo;m++){
-    alguelAcum+=alAtual;
-    parcelaAcum+=parcelaAtual;
-    const diff=alAtual-parcelaAtual;
-    diferencaAcum+=diff;
-    if(invOn) diferencaInvestida=diferencaInvestida*(1+invMensal)+Math.max(0,diff);
-    if(m%12===0){alAtual*=(1+alCorrecao); if(reajuste>0 && tipoReajuste) parcelaAtual*=(1+reajuste);}
+  const periodReaj=tipoReajuste?(tipoReajuste.endsWith('-anual')?12:tipoReajuste.endsWith('-semestral')?6:1):12;
+  const anosTotal=Math.ceil(Math.max(0,prazo-expectativa)/12);
+  for(let k=1;k<=anosTotal;k++){
+    const aluguelAno=alPrestacao*Math.pow(1+alCorrecao,k-1);
+    const mesInicio=expectativa+(k-1)*12+1;
+    const mesFim=Math.min(prazo,expectativa+k*12);
+    const mesesReais=Math.max(1,mesFim-mesInicio+1);
+    let somaParcelaAno=0;
+    for(let m=mesInicio;m<=mesFim;m++){
+      const fParc=(reajuste>0 && tipoReajuste)?Math.pow(1+reajuste,Math.floor(m/periodReaj)):1;
+      somaParcelaAno+=parcelaBase*fParc;
+    }
+    const parcelaMediaAno=somaParcelaAno/mesesReais;
+    const diffMensal=aluguelAno-parcelaMediaAno;
+    const diffAnual=diffMensal*12;  // Conkey: anualiza mesmo no último ano fracionário
+    diferencaAcum+=diffAnual;
+    if(invOn) diferencaInvestida=diferencaInvestida*Math.pow(1+invMensal,12)+Math.max(0,diffAnual);
   }
-  const diferencaMedia=prazo>0?diferencaAcum/prazo:0;
+  const diferencaMedia=anosTotal>0?diferencaAcum/(anosTotal*12):0;
   document.getElementById('alDiferenca').value=fmtMoney(diferencaMedia);
 
-  // Resultado Alavancagem
+  // Resultado Alavancagem (alinhado com Conkey)
   const anos=prazo/12;
-  const valorAlavancado=Math.max(0,credito-imCompra); // o que o consórcio "alavanca" além do que daria pra comprar
-  const valorizacaoFinal=imValor*(Math.pow(1+imValorizacao,anos)-1);
-  const patrimonio=imValor*Math.pow(1+imValorizacao,anos)+diferencaInvestida-fpTotalParc-fpSaldoFinal;
+  // Conkey: Valor Alavancado = valor de compra do imóvel (o que o consórcio alavancou)
+  const valorAlavancado=imCompra;
+  // Conkey: Valorização = valor FINAL do imóvel após valorização durante o prazo
+  const valorizacaoFinal=imCompra*Math.pow(1+imValorizacao,anos);
+  // Conkey: Patrimônio Total = soma dos 3 cards (alavancado + valorização + diferença) + investimento
+  const patrimonio=valorAlavancado+valorizacaoFinal+diferencaAcum+diferencaInvestida;
 
   document.getElementById('resAlavancado').textContent=fmtMoney(valorAlavancado);
   document.getElementById('resValorizacao').textContent=fmtMoney(valorizacaoFinal);
