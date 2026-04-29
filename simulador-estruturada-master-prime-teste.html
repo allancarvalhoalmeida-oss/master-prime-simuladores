@@ -653,15 +653,26 @@ function recalc() {
   document.getElementById('reducaoPrazo_parc').textContent = formatMoney(parcReducaoPrazo);
   document.getElementById('reducaoPrazo_prazo').textContent = novoPrazoReducao;
 
-  // CET — fórmula Conkey Op. Estruturada: reajuste anual / prazo total (em meses)
-  // Ex: reajuste 5% e prazo 100m → CET mensal = 0,05% (validado contra Conkey)
-  function cetEstruturada(prazoTotal) {
-    if (prazoTotal <= 0) return { mensal: 0, anual: 0 };
-    const cm = reajuste / prazoTotal;
-    return { mensal: cm*100, anual: (Math.pow(1+cm,12)-1)*100 };
+  // CET — fórmula Conkey (engenharia reversa Op. Simples + ajuste Op. Estruturada):
+  //   custo = (adm + fr) × crédito                  (custo nominal das taxas)
+  //   disponível = crédito − lance recursos próprios (capital líquido do tomador)
+  //   prazoEf = prazo total
+  //   CET mensal_real = (1 + custo/disponível)^(1/prazoEf) − 1
+  //   Conkey arredonda mensal para 2 casas decimais antes do anual
+  //   CET anual = (1 + mensal_arred)^12 − 1
+  // Validado contra Conkey: anual exato; mensal pode divergir 0,01% por arredondamento.
+  function cetConkey(prazoEf) {
+    const disponivel = credito - lanceProprios_v;
+    if (prazoEf <= 0 || disponivel <= 0) return { mensal: 0, anual: 0 };
+    const custo = credito * (taxaAdm + fundo);
+    const ratio = custo / disponivel;
+    const mensalReal = Math.pow(1 + ratio, 1/prazoEf) - 1;
+    const mensalArred = Math.round(mensalReal * 10000) / 10000;
+    const anual = Math.pow(1 + mensalArred, 12) - 1;
+    return { mensal: mensalArred*100, anual: anual*100 };
   }
-  const cetA = cetEstruturada(prazo);
-  const cetB = cetEstruturada(prazo);  // mesma fórmula para ambos cenários
+  const cetA = cetConkey(prazo);                            // Reduç Parcela: prazo total
+  const cetB = cetConkey(expectativa + novoPrazoReducao);   // Reduç Prazo: efetivo de pagamento
   document.getElementById('reducaoParcela_cm').textContent = formatPct(cetA.mensal, 2);
   document.getElementById('reducaoParcela_ca').textContent = formatPct(cetA.anual, 2);
   document.getElementById('reducaoPrazo_cm').textContent = formatPct(cetB.mensal, 2);
