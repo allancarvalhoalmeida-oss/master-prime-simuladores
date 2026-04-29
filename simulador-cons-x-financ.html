@@ -165,8 +165,13 @@
       <div class="grid grid-4">
         <div class="field"><label>Tipo de financiamento</label>
           <select id="finTipo">
-            <option value="SAC">SAC</option>
-            <option value="PRICE">PRICE</option>
+            <optgroup label="Imóveis">
+              <option value="SAC">SAC</option>
+              <option value="PRICE">PRICE</option>
+            </optgroup>
+            <optgroup label="Veículos">
+              <option value="CDC">CDC</option>
+            </optgroup>
           </select>
         </div>
         <div class="field"><label>Valor do imóvel</label><input type="text" id="finImovel" placeholder="R$ 0,00" data-mask="money"></div>
@@ -230,7 +235,8 @@
         <span style="font-size:13px; color:var(--text-muted);">Investimento da diferença da parcela Consórcio vs Financiamento</span>
       </label>
       <div id="rowInvestimento" style="display:none;">
-        <div class="grid grid-3" style="margin-bottom:10px;">
+        <div class="grid grid-4" style="margin-bottom:10px;">
+          <div class="field"><label>% Taxa Selic</label><input type="text" id="invSelic" value="15,00 %" data-mask="pct2"></div>
           <div class="field"><label>CDI (a.a.)</label><input type="text" id="invCDI" value="14,90 %" data-mask="pct2"></div>
           <div class="field"><label>Rentabilidade do CDI</label><input type="text" id="invRent" value="100,00 %" data-mask="pct2"></div>
           <div class="field"><label>Prazo (meses)</label><input type="text" id="invPrazo" data-mask="int"></div>
@@ -303,12 +309,21 @@ document.getElementById('fgtsOn').addEventListener('change',e=>{
   recalc();
 });
 
-// Investimento toggle (3 caixas: CDI, Rentab, Prazo)
+// Investimento toggle (4 caixas: Selic, CDI, Rentab, Prazo)
 document.getElementById('invOn').addEventListener('change',e=>{
+  document.getElementById('invSelic').disabled = !e.target.checked;
   document.getElementById('invCDI').disabled = !e.target.checked;
   document.getElementById('invRent').disabled = !e.target.checked;
   document.getElementById('invPrazo').disabled = !e.target.checked;
   recalc();
+});
+// Sincronização Selic → CDI (CDI = Selic - 0,10pp por padrão)
+document.getElementById('invSelic').addEventListener('blur', () => {
+  const selic = unmaskPct(document.getElementById('invSelic').value);
+  if(selic > 0) {
+    document.getElementById('invCDI').value = (selic - 0.10).toFixed(2).replace('.',',') + ' %';
+    recalc();
+  }
 });
 
 // Auto-calcular % Lance Total
@@ -460,16 +475,18 @@ function recalc(){
   // Mensal = (sum_parcelas_cenário / lance_próprios)^(1/prazoEf) - 1
   // Soma considera reajustes conforme tipoReajuste, e parcela posterior à contemplação varia conforme cenário
   function calcSumParcelas(parcelaPos, prazoFinal) {
+    // Convenção Conkey: reajuste fire ANTES da parcela ser paga no mês do aniversário.
+    // Pré-cont: parcela_inicial reajusta a cada anniversary até m=expectativa
+    // Pós-cont: parcela_pos começa em m=expectativa+1 sem reajuste e reajusta a cada anniversary subsequente
     let sum = 0;
-    let p = parcelaBase;
+    let pPre = parcelaBase;
+    let pPos = parcelaPos;
     for(let m = 1; m <= prazoFinal; m++) {
-      sum += p;
-      if(reajusteAplicaEm(m) && m < prazoFinal) {
-        p *= (1+reajuste);
+      if(reajusteAplicaEm(m)) {
+        if(m <= expectativa) pPre *= (1+reajuste);
+        else                  pPos *= (1+reajuste);
       }
-      if(m === expectativa) {
-        p = parcelaPos;
-      }
+      sum += (m <= expectativa) ? pPre : pPos;
     }
     return sum;
   }
@@ -551,25 +568,26 @@ function recalc(){
   const dfiMensal = finDFIpct;
 
   // Calcular cronograma de financiamento
-  // Convenção: TR aplica como ADITIVO ao juros mensal sobre o saldo (não acumula saldo principal)
-  // Isso bate com prática real do SAC Caixa (TR ajusta o juros do mês, não infla o saldo)
+  // SAC: amort fixa, juros sobre saldo. PRICE: parcela fixa. CDC: PRICE simplificado para veículos
+  // TR como aditivo na parcela com tarifa (não acumula saldo)
   function calcCronograma(comTarifa) {
-    if(finPrazoF <= 0 || finFinanciado <= 0) return {ini:0, fim:0, sumP:0, cf:[]};
+    if(finPrazoF <= 0 || finFinanciado <= 0) return {ini:0, fim:0, sumP:0, cf:[], parcelas:[]};
     let saldo = finFinanciado;
     let pIni = 0, pFim = 0, sumP = 0;
-    const cf = [finFinanciado]; // recebe no m=0
+    const cf = [finFinanciado];
+    const parcelas = [];
     const amort = finTipo === 'SAC' ? finFinanciado / finPrazoF : 0;
-    // PRICE: parcela fixa = PV × i / (1 - (1+i)^-n)
-    const pricePMT = finTipo === 'PRICE' && iMensal > 0 ? finFinanciado * iMensal / (1 - Math.pow(1+iMensal, -finPrazoF)) : 0;
+    const pricePMT = (finTipo === 'PRICE' || finTipo === 'CDC') && iMensal > 0
+      ? finFinanciado * iMensal / (1 - Math.pow(1+iMensal, -finPrazoF))
+      : 0;
     for(let m=1; m<=finPrazoF; m++) {
-      // Juros sobre saldo. TR é tratado como aditivo (entra na parcela com tarifa)
       const juros = saldo * iMensal;
       const trMes = saldo * trMensal;
       let parcelaBase, amortMes;
       if(finTipo === 'SAC') {
         amortMes = amort;
         parcelaBase = juros + amortMes;
-      } else { // PRICE
+      } else { // PRICE / CDC
         parcelaBase = pricePMT;
         amortMes = parcelaBase - juros;
       }
@@ -577,15 +595,15 @@ function recalc(){
       if(saldo < 0) saldo = 0;
       let parcelaTotal = parcelaBase;
       if(comTarifa) {
-        // TR + MIP sobre saldo, DFI sobre valor do imóvel + tarifa fixa
         parcelaTotal += trMes + saldo * mipMensal + finImovel * dfiMensal + finTarifa;
       }
       if(m === 1) pIni = parcelaTotal;
       pFim = parcelaTotal;
       sumP += parcelaTotal;
+      parcelas.push(parcelaTotal);
       cf.push(-parcelaTotal);
     }
-    return {ini: pIni, fim: pFim, sumP, cf};
+    return {ini: pIni, fim: pFim, sumP, cf, parcelas};
   }
 
   const cron1 = calcCronograma(false); // sem tarifa
@@ -614,35 +632,63 @@ function recalc(){
 
   // Auto-preencher prazo investimento com prazo do consórcio
   const invPrazoEl = document.getElementById('invPrazo');
-  if(document.activeElement?.id !== 'invPrazo' && !invPrazoEl.value) invPrazoEl.value = prazo;
+  if(document.activeElement?.id !== 'invPrazo' && (!invPrazoEl.value || invPrazoEl.value === '0')) invPrazoEl.value = prazo;
 
-  // Investimento da diferença Consórcio vs Financiamento
+  // Investimento da diferença Consórcio vs Financiamento (Conkey-style)
+  // Capital = sum de diferenças mensais POSITIVAS (parcela_financ - parcela_consórcio mês a mês)
+  // FV = sum de cada diferença capitalizada do mês m até o fim do prazo a CDI
+  // Ganho Bruto = FV (= Capital + Juros)
+  // IR = 15% × Juros (>24 meses)  | Valor Líquido = FV - IR  | Ganho Líquido = Valor Líquido - Capital
   const invOn = document.getElementById('invOn').checked;
-  let invBruto = 0, invIR = 0, invLiq = 0, invGanho = 0;
+  let invCapital = 0, invBruto = 0, invIR = 0, invLiq = 0, invGanho = 0;
   if(invOn) {
     const invCDI_aa = unmaskPct(document.getElementById('invCDI').value)/100;
     const invRent = unmaskPct(document.getElementById('invRent').value)/100;
-    const invPrazoMeses = parseInt(invPrazoEl.value)||prazo;
+    const invPrazoMeses = parseInt(invPrazoEl.value) || prazo;
     const taxaInv = invCDI_aa * invRent;
     const iMensInv = taxaInv>0 ? Math.pow(1+taxaInv, 1/12) - 1 : 0;
-    // Diferença mensal Financ - Consórcio (positiva = sobra para investir)
-    const parcelaCons = parcReducaoParcela;
-    const parcelaFin = cron2.ini;
-    const diferencaMensal = parcelaFin - parcelaCons;
-    if(diferencaMensal > 0 && iMensInv > 0) {
-      // FV de annuity
-      const fv = diferencaMensal * (Math.pow(1+iMensInv, invPrazoMeses) - 1) / iMensInv;
-      invBruto = fv - diferencaMensal * invPrazoMeses;
-      // IR regressivo simplificado: até 6m=22.5%, 12m=20%, 24m=17.5%, >24=15%
-      const irPct = invPrazoMeses <= 6 ? 0.225 : invPrazoMeses <= 12 ? 0.20 : invPrazoMeses <= 24 ? 0.175 : 0.15;
-      invIR = invBruto * irPct;
-      invLiq = fv - invIR;
-      invGanho = invBruto - invIR;
+    // Cronograma das parcelas consórcio (com reajuste, separando pré e pós-cont)
+    let pCons = parcelaBase;
+    const parcelasFin = cron2.parcelas;
+    let fvAcum = 0;
+    for(let m = 1; m <= Math.min(invPrazoMeses, prazo); m++) {
+      // Aplica reajuste antes do pagamento no mês do aniversário (igual à fórmula Custo Consórcio)
+      if(reajusteAplicaEm(m)) {
+        if(m <= expectativa) pCons *= (1+reajuste);
+      }
+      // Após contemp, parcela passa a ser parcReducaoParcela
+      const parcelaConsM = (m > expectativa) ? (m === expectativa+1 ? parcReducaoParcela : pCons) : pCons;
+      // Hmm cleaner: use pre-cont para m<=expectativa, parcRed (com reajustes pós) para m>expectativa
+      let parcCons;
+      if(m <= expectativa) parcCons = pCons;
+      else {
+        // Pós-cont: parcRed reajusted as appropriate
+        parcCons = parcReducaoParcela;
+        // contagem de aniversários após contemp
+        for(let k = expectativa+1; k <= m; k++) {
+          if(reajusteAplicaEm(k)) parcCons *= (1+reajuste);
+        }
+      }
+      const parcFin = parcelasFin[m-1] || 0;
+      const diff = parcFin - parcCons;
+      if(diff > 0) {
+        invCapital += diff;
+        // Capitaliza diff de m até invPrazoMeses
+        const remainingMonths = invPrazoMeses - m;
+        fvAcum += diff * Math.pow(1+iMensInv, remainingMonths);
+      }
     }
+    invBruto = fvAcum;
+    const juros = Math.max(0, invBruto - invCapital);
+    const irPct = invPrazoMeses <= 6 ? 0.225 : invPrazoMeses <= 12 ? 0.20 : invPrazoMeses <= 24 ? 0.175 : 0.15;
+    invIR = juros * irPct;
+    invLiq = invBruto - invIR;
+    invGanho = invLiq - invCapital;
   }
   document.getElementById('rowInvestimento').style.display = invOn ? '' : 'none';
   document.getElementById('resInvBruto').textContent = fmtMoney(invBruto);
-  document.getElementById('resInvIR').textContent = fmtMoney(invIR);
+  // IR exibido como negativo (estilo Conkey)
+  document.getElementById('resInvIR').textContent = invIR > 0 ? '-' + fmtMoney(invIR) : fmtMoney(0);
   document.getElementById('resInvLiq').textContent = fmtMoney(invLiq);
   document.getElementById('resInvGan').textContent = fmtMoney(invGanho);
 
@@ -652,8 +698,8 @@ function recalc(){
   document.getElementById('resFinCusto').textContent = fmtMoney(custoFinanciamento);
   document.getElementById('resFinParc').textContent = fmtMoney(cron2.ini);
 
-  // Economia = Custo Financ - Custo Consórcio + (Ganho líquido investimento, se ON)
-  const economia = (custoFinanciamento - custoConsorcio) + invGanho;
+  // Economia = (Custo Financ - Custo Consórcio) + Valor Líquido (não Ganho Líquido) — convenção referencial
+  const economia = (custoFinanciamento - custoConsorcio) + invLiq;
   document.getElementById('resEconomia').textContent = fmtMoney(economia);
 }
 
