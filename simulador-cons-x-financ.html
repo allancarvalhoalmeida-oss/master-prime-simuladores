@@ -456,19 +456,34 @@ function recalc(){
     return r;
   }
 
-  // === CET CONSÓRCIO (fórmula equivalente ao referencial) ===
-  // Mensal = (1 + custo/disp)^(1/prazoEf) - 1, onde custo = credito × (adm + fr) e disp = credito × (1 - lanceTotal_pct)
-  function cetConsorcio(prazoEf) {
-    const lanceTotal_pct = pP + pE + pFGTS;
-    const disp = credito * (1 - lanceTotal_pct);
-    if(prazoEf <= 0 || disp <= 0) return {m:0, a:0};
-    const ratio = (credito*(taxaAdm+fundo)) / disp;
-    const m = Math.round((Math.pow(1+ratio, 1/prazoEf) - 1) * 10000) / 10000;
+  // === CET CONSÓRCIO (fórmula descoberta por engenharia reversa do referencial Conkey x Financiamento) ===
+  // Mensal = (sum_parcelas_cenário / lance_próprios)^(1/prazoEf) - 1
+  // Soma considera reajustes conforme tipoReajuste, e parcela posterior à contemplação varia conforme cenário
+  function calcSumParcelas(parcelaPos, prazoFinal) {
+    let sum = 0;
+    let p = parcelaBase;
+    for(let m = 1; m <= prazoFinal; m++) {
+      sum += p;
+      if(reajusteAplicaEm(m) && m < prazoFinal) {
+        p *= (1+reajuste);
+      }
+      if(m === expectativa) {
+        p = parcelaPos;
+      }
+    }
+    return sum;
+  }
+  function cetConsorcio(parcelaPos, prazoFinal) {
+    if(prazoFinal <= 0 || lanceProprios_v <= 0) return {m:0, a:0};
+    const sumPar = calcSumParcelas(parcelaPos, prazoFinal);
+    const ratio = sumPar / lanceProprios_v;
+    if(ratio <= 0) return {m:0, a:0};
+    const m = Math.pow(ratio, 1/prazoFinal) - 1;
     const a = Math.pow(1+m, 12) - 1;
     return {m: m*100, a: a*100};
   }
-  const cetA = cetConsorcio(prazo);                            // Reduç Parcela: prazoEf = prazo total
-  const cetB = cetConsorcio(expectativa + novoPrazoReducao);   // Reduç Prazo: prazoEf = expectativa + novoPrazoRestante
+  const cetA = cetConsorcio(parcReducaoParcela, prazo);                            // Reduç Parcela: prazoFinal = prazo total
+  const cetB = cetConsorcio(parcReducaoPrazo, expectativa + novoPrazoReducao);     // Reduç Prazo: prazoFinal = expectativa + novoPrazoRestante
   document.getElementById('reducaoParcela_parc').textContent = fmtMoney(parcReducaoParcela);
   document.getElementById('reducaoParcela_prazo').textContent = prazoRestante;
   document.getElementById('reducaoParcela_cm').textContent = fmtPct(cetA.m, 2);
