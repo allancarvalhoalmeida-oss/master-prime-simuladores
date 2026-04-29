@@ -647,7 +647,8 @@ function recalc() {
   document.getElementById('creditoDisponivel').textContent = formatMoney(creditoDisp);
 
   // === EVOLUÇÃO PÓS CONTEMPLAÇÃO ===
-  const cdi = selic * 0.993;
+  // Conkey: CDI = Selic - 0,10pp (não 0.993 × Selic, evita arred de 14,89 → 14,90)
+  const cdi = selic - 0.001;
   document.getElementById('cdi').value = formatPct(cdi * 100, 2);
   let rentabilidade = 0;
   let creditoMaisRent = creditoDisp;
@@ -667,22 +668,29 @@ function recalc() {
   const parcReducaoPrazo = parcelaAtualNoMomento;
   const novoPrazoReducao = parcReducaoPrazo > 0 ? Math.ceil(saldoApoLance / parcReducaoPrazo) : 0;
 
-  // Custo efetivo via TIR — fluxo do cliente:
-  //   Mês 0: recebe crédito disponível (entrada) - lance recursos próprios pago (saída)
-  //   Mês 1+: paga parcela (saída)
-  function calcCustoEfetivo(parcelaPos, prazoTotalPos) {
-    if (prazoTotalPos === 0 || creditoDisp <= 0) return { mensal: 0, anual: 0 };
-    const fluxos = [];
-    fluxos.push(creditoDisp - lanceProprios_v);  // só lance próprios sai do bolso, embutido/FGTS não
-    for (let m = 1; m <= prazoTotalPos; m++) fluxos.push(-parcelaPos);
-    if (fluxos[0] <= 0) return {mensal:0, anual:0};
-    const tir = calcularTIR(fluxos, 0.005);
-    if (!isFinite(tir) || isNaN(tir)) return {mensal: 0, anual: 0};
-    return { mensal: tir, anual: Math.pow(1 + tir, 12) - 1 };
+  // Custo efetivo — fórmula Conkey (descoberta por engenharia reversa):
+  //   custo = (adm + fr) × crédito          (custo nominal das taxas)
+  //   disponível = crédito − lance próprios  (capital líquido do tomador)
+  //   prazoEf Reduç Parcela = prazo total
+  //   prazoEf Reduç Prazo   = expectativa + prazo restante (efetivo de pagamento)
+  //
+  //   CET mensal_real = (1 + custo/disponível)^(1/prazoEf) − 1
+  //   CET mensal_exibido = arredondado para 2 casas (Conkey arredonda antes do anual)
+  //   CET anual = (1 + mensal_exibido)^12 − 1
+  function calcCustoEfetivoConkey(prazoEf) {
+    const disponivel = credito - lanceProprios_v;
+    if (prazoEf <= 0 || disponivel <= 0) return { mensal: 0, anual: 0 };
+    const custo = credito * (taxaAdm + fundo);
+    const ratio = custo / disponivel;
+    const mensalReal = Math.pow(1 + ratio, 1 / prazoEf) - 1;
+    // Conkey arredonda mensal para 2 casas decimais antes de calcular o anual
+    const mensalExibido = Math.round(mensalReal * 10000) / 10000;
+    const anual = Math.pow(1 + mensalExibido, 12) - 1;
+    return { mensal: mensalExibido, anual: anual };
   }
 
-  const ceParcela = calcCustoEfetivo(parcReducaoParcela, prazoRestante);
-  const cePrazo = calcCustoEfetivo(parcReducaoPrazo, novoPrazoReducao);
+  const ceParcela = calcCustoEfetivoConkey(prazo);                              // Reduç Parc: prazo total
+  const cePrazo   = calcCustoEfetivoConkey(expectativa + novoPrazoReducao);     // Reduç Prazo: efetivo
 
   document.getElementById('reducaoParcela_parc').textContent = formatMoney(parcReducaoParcela);
   document.getElementById('reducaoParcela_prazo').textContent = prazoRestante;
