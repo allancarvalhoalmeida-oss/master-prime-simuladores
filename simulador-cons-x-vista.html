@@ -527,27 +527,29 @@ function recalc(){
   const iMensInv = taxaInv_aa>0 ? Math.pow(1+taxaInv_aa, 1/12) - 1 : 0;
 
   // Simular investimento mês a mês com aportes e saques (estilo Conkey)
-  // Capital = invValor + aportes (NÃO diminui com saques — saques só reduzem o saldo)
+  // Capital = invValor + aportes (NÃO diminui com saques)
+  // IR é deduzido do saldo a cada saque proporcionalmente à fração juros do saldo (FIFO simplificado)
   let saldoInv = invValor;
-  const capitalInv = invValor + (invAportes * invPeriodo); // total investido (inicial + todos aportes)
-  // Para rastreamento de IR: somar juros mensais (rendimento positivo) ao longo do período
-  let jurosAcumulados = 0;
+  let principalRemanescente = invValor; // rastreio do principal não-rendido
+  const capitalInv = invValor + (invAportes * invPeriodo);
+  let invIR = 0;
+  const irPct = invPeriodo <= 6 ? 0.225 : invPeriodo <= 12 ? 0.20 : invPeriodo <= 24 ? 0.175 : 0.15;
   let pConsAtual = parcelaBase;
   for(let m = 1; m <= invPeriodo; m++) {
     if(reajusteAplicaEm(m)) {
       if(m <= expectativa) pConsAtual *= (1+reajuste);
     }
-    // 1) Rendimento mensal sobre o saldo (juros antes do saque/aporte)
+    // 1) Rendimento mensal sobre o saldo
     if(saldoInv > 0 && iMensInv > 0) {
-      const jurosMes = saldoInv * iMensInv;
-      jurosAcumulados += jurosMes;
-      saldoInv += jurosMes;
+      saldoInv += saldoInv * iMensInv;
     }
-    // 2) Aportes mensais (entram no saldo após rendimento)
+    // 2) Aportes (entram como principal)
     if(invAportes > 0) {
       saldoInv += invAportes;
+      principalRemanescente += invAportes;
     }
-    // 3) Saques (NÃO reduzem capital; apenas saldo)
+    // 3) Saques (parcelas + lance)
+    let saqueTotal = 0;
     if(invSacarParcelas && m <= prazo) {
       let parcelaPagar;
       if(m <= expectativa) parcelaPagar = pConsAtual;
@@ -557,19 +559,28 @@ function recalc(){
           if(reajusteAplicaEm(k)) parcelaPagar *= (1+reajuste);
         }
       }
-      saldoInv -= parcelaPagar;
+      saqueTotal += parcelaPagar;
     }
     if(invSacarLance && m === invMesSaque && invSaqueLance > 0) {
-      saldoInv -= invSaqueLance;
+      saqueTotal += invSaqueLance;
+    }
+    if(saqueTotal > 0 && saldoInv > 0) {
+      // Fração juros no saldo: (saldo - principal_remanescente) / saldo
+      const jurosNoSaldo = Math.max(0, saldoInv - principalRemanescente);
+      const fracaoJuros = saldoInv > 0 ? jurosNoSaldo / saldoInv : 0;
+      const jurosNoSaque = saqueTotal * fracaoJuros;
+      const principalNoSaque = saqueTotal - jurosNoSaque;
+      const irSaque = jurosNoSaque * irPct;
+      // Saldo perde saque + IR
+      saldoInv -= (saqueTotal + irSaque);
+      principalRemanescente = Math.max(0, principalRemanescente - principalNoSaque);
+      invIR += irSaque;
     }
   }
-  const invBruto = Math.max(0, saldoInv);
-  // IR regressivo sobre os juros acumulados (positive only)
-  const irPct = invPeriodo <= 6 ? 0.225 : invPeriodo <= 12 ? 0.20 : invPeriodo <= 24 ? 0.175 : 0.15;
-  const invIR = Math.max(0, jurosAcumulados) * irPct;
-  const invLiq = invBruto - invIR;
+  const invBruto = Math.max(0, saldoInv) + invIR; // Bruto = saldo final + IR já deduzido (saldo "antes do IR")
+  const invLiq = Math.max(0, saldoInv);
   const invGanho = invLiq - capitalInv;
-  const juros = invBruto - capitalInv; // pode ser negativo se saques drenaram
+  const juros = invBruto - capitalInv;
   const rentBruta = capitalInv > 0 ? (juros / capitalInv) * 100 : 0;
   const rentLiquida = capitalInv > 0 ? (invGanho / capitalInv) * 100 : 0;
 
