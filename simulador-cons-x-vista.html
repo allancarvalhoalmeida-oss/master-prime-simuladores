@@ -537,11 +537,17 @@ function recalc(){
     if(reajusteAplicaEm(m)) {
       if(m <= expectativa) pConsAtual *= (1+reajuste);
     }
-    // Aportes mensais (entram no saldo)
+    // 1) Rendimento mensal sobre o saldo (juros antes do saque/aporte)
+    if(saldoInv > 0 && iMensInv > 0) {
+      const jurosMes = saldoInv * iMensInv;
+      jurosAcumulados += jurosMes;
+      saldoInv += jurosMes;
+    }
+    // 2) Aportes mensais (entram no saldo após rendimento)
     if(invAportes > 0) {
       saldoInv += invAportes;
     }
-    // Saques (NÃO reduzem capital; apenas saldo)
+    // 3) Saques (NÃO reduzem capital; apenas saldo)
     if(invSacarParcelas && m <= prazo) {
       let parcelaPagar;
       if(m <= expectativa) parcelaPagar = pConsAtual;
@@ -555,12 +561,6 @@ function recalc(){
     }
     if(invSacarLance && m === invMesSaque && invSaqueLance > 0) {
       saldoInv -= invSaqueLance;
-    }
-    // Rendimento mensal sobre o saldo (acumula juros se saldo > 0)
-    if(saldoInv > 0 && iMensInv > 0) {
-      const jurosMes = saldoInv * iMensInv;
-      jurosAcumulados += jurosMes;
-      saldoInv += jurosMes;
     }
   }
   const invBruto = Math.max(0, saldoInv);
