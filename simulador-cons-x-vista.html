@@ -290,14 +290,6 @@ document.getElementById('fgtsOn').addEventListener('change',e=>{
   recalc();
 });
 
-// Investimento toggle (4 caixas: Selic, CDI, Rentab, Prazo)
-document.getElementById('invOn').addEventListener('change',e=>{
-  document.getElementById('invSelic').disabled = !e.target.checked;
-  document.getElementById('invCDI').disabled = !e.target.checked;
-  document.getElementById('invRent').disabled = !e.target.checked;
-  document.getElementById('invPrazo').disabled = !e.target.checked;
-  recalc();
-});
 // Sincronização Selic → CDI (CDI = Selic - 0,10pp por padrão)
 document.getElementById('invSelic').addEventListener('blur', () => {
   const selic = unmaskPct(document.getElementById('invSelic').value);
@@ -306,9 +298,11 @@ document.getElementById('invSelic').addEventListener('blur', () => {
     recalc();
   }
 });
-// Marcar invPrazo como editado manualmente quando user digitar
-document.getElementById('invPrazo').addEventListener('input', e => {
-  e.target.dataset.userEdited = '1';
+// Marcar invValor e invPeriodo como editados manualmente quando user digita
+['invValor','invPeriodo'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', e => {
+    e.target.dataset.userEdited = '1';
+  });
 });
 
 // Auto-calcular % Lance Total
@@ -619,30 +613,26 @@ document.getElementById('resetConsorcio').addEventListener('click',()=>{
   ['seguro','redutor','adesao','tipoLance','lanceP','lanceE','lanceFGTS'].forEach(id=>document.getElementById(id).disabled=true);
   recalc();
 });
-document.getElementById('resetFinanc').addEventListener('click',()=>{
-  document.getElementById('finImovel').value='';
-  document.getElementById('finImovel').dataset.auto = '1';
-  document.getElementById('finEntrada').value='';
-  document.getElementById('finEntrada').dataset.auto = '1';
-  document.getElementById('finPrazo').value='420';
-  document.getElementById('finJuros').value='12,99 %';
-  document.getElementById('finTR').value='1,88 %';
-  document.getElementById('finIdade').value='';
-  document.getElementById('finMIP').value='0,0000 %';
-  document.getElementById('finDFI').value='0,0055 %';
-  document.getElementById('finTarifa').value='R$ 25,00';
-  document.getElementById('finTipo').value='SAC';
+document.getElementById('resetInvest').addEventListener('click',()=>{
+  document.getElementById('invValor').value='';
+  document.getElementById('invValor').dataset.userEdited = '';
+  document.getElementById('invAportes').value='';
+  document.getElementById('invPeriodo').value='';
+  document.getElementById('invPeriodo').dataset.userEdited = '';
+  document.getElementById('invMesSaque').value='';
+  document.getElementById('invSaqueLance').value='';
+  document.getElementById('invSelic').value='15,00 %';
+  document.getElementById('invCDI').value='14,90 %';
+  document.getElementById('invRent').value='100,00 %';
+  document.getElementById('invSacarLance').value='NAO';
+  document.getElementById('invSacarParcelas').value='NAO';
+  document.getElementById('bemIndicador').value='VALORIZACAO';
+  document.getElementById('bemIndice').value='6,39 %';
   recalc();
-});
-// Quando user edita Imóvel/Entrada manualmente, desliga auto-fill
-['finImovel','finEntrada'].forEach(id=>{
-  document.getElementById(id).addEventListener('focus', e => {
-    e.target.dataset.auto = '0';
-  });
 });
 document.getElementById('btnLimpar').addEventListener('click',()=>{
   document.getElementById('resetConsorcio').click();
-  document.getElementById('resetFinanc').click();
+  document.getElementById('resetInvest').click();
 });
 document.getElementById('btnPdf').addEventListener('click',()=>alert('Baixar PDF — implementação pendente.'));
 
