@@ -577,8 +577,14 @@ function recalc(){
       invIR += irSaque;
     }
   }
-  const invBruto = Math.max(0, saldoInv) + invIR; // Bruto = saldo final + IR já deduzido (saldo "antes do IR")
-  const invLiq = Math.max(0, saldoInv);
+  // Bruto = saldo final SEM IR deduzido (representa o saldo "bruto" do investimento)
+  // Líq = saldo final - IR FINAL sobre juros remanescentes no resgate
+  const invBrutoCalc = Math.max(0, saldoInv);
+  const jurosRemanescentes = Math.max(0, invBrutoCalc - principalRemanescente);
+  const irFinal = jurosRemanescentes * irPct;
+  invIR += irFinal;
+  const invBruto = invBrutoCalc;
+  const invLiq = invBrutoCalc - irFinal;
   const invGanho = invLiq - capitalInv;
   const juros = invBruto - capitalInv;
   const rentBruta = capitalInv > 0 ? (juros / capitalInv) * 100 : 0;
