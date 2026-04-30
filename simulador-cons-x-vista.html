@@ -581,14 +581,14 @@ function recalc(){
   document.getElementById('resInvGan').textContent = fmtMoney(invGanho);
 
   // === RESULTADO ===
-  // Custo Lance = lance_proprios_R$ (saída de caixa do consorciado)
-  const custoLance = lanceProprios_v;
-  // Custo Parcelas = soma das parcelas com reajuste (Custo Operação)
-  const custoParcelas = custoConsorcio;
+  // Custo Lance: só subtraído se NÃO foi sacado do investimento
+  const custoLance = invSacarLance ? 0 : lanceProprios_v;
+  // Custo Parcelas: só subtraído se NÃO foram sacadas do investimento
+  const custoParcelas = invSacarParcelas ? 0 : custoConsorcio;
 
   // Fazendo À Vista = compra à vista, deixa o bem valorizar
   const fazendoAVista = bemValorizado;
-  // Fazendo com Consórcio = bem valorizado + investimento líquido - custo lance - custo parcelas
+  // Fazendo com Consórcio = bem valorizado + investimento líquido - custos não-cobertos pelo invest
   const fazendoComConsorcio = bemValorizado + invLiq - custoLance - custoParcelas;
   const ganhou = fazendoComConsorcio - fazendoAVista;
 
