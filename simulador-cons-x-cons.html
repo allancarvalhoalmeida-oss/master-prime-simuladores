@@ -59,6 +59,10 @@
 </style>
 <script>if (new URLSearchParams(location.search).get('embed') === '1') document.documentElement.classList.add('embedded');</script>
 <style>html.embedded header { display: none; } html.embedded main { padding-top: 16px; }</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="pdf-master-prime.js"></script>
+<script src="analitico-cet.js"></script>
 </head>
 <body>
 <header><div class="brand"><div class="brand-mark">M</div><div class="brand-text"><h1>Master Prime</h1><p>Simulador de Consórcio</p></div></div></header>
@@ -251,7 +255,7 @@
         <div class="pos-row"><span>Prazo restante</span><span id="rp_prazo_p1">0</span></div>
         <div class="pos-row"><span>Custo da operação</span><span id="rp_custo_p1">R$ 0,00</span></div>
         <div class="pos-row"><span>CET mensal</span><span id="rp_cm_p1">0,00 %</span></div>
-        <div class="pos-row"><span>CET anual</span><span id="rp_ca_p1">0,00 %</span></div>
+        <div class="pos-row"><span>CET anual</span><span style="display:inline-flex;align-items:center;gap:8px;"><span id="rp_ca_p1">0,00 %</span><button type="button" class="ace-eye" onclick="AnaliticoCet.abrir('p1_parcela')" title="Ver memória de cálculo"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button></span></div>
       </div>
       <div class="pos-card p2">
         <h4>Proposta 2<span class="tag">P2</span></h4>
@@ -259,7 +263,7 @@
         <div class="pos-row"><span>Prazo restante</span><span id="rp_prazo_p2">0</span></div>
         <div class="pos-row"><span>Custo da operação</span><span id="rp_custo_p2">R$ 0,00</span></div>
         <div class="pos-row"><span>CET mensal</span><span id="rp_cm_p2">0,00 %</span></div>
-        <div class="pos-row"><span>CET anual</span><span id="rp_ca_p2">0,00 %</span></div>
+        <div class="pos-row"><span>CET anual</span><span style="display:inline-flex;align-items:center;gap:8px;"><span id="rp_ca_p2">0,00 %</span><button type="button" class="ace-eye" onclick="AnaliticoCet.abrir('p2_parcela')" title="Ver memória de cálculo"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button></span></div>
       </div>
     </div>
 
@@ -271,7 +275,7 @@
         <div class="pos-row"><span>Prazo restante</span><span id="rd_prazo_p1">0</span></div>
         <div class="pos-row"><span>Custo da operação</span><span id="rd_custo_p1">R$ 0,00</span></div>
         <div class="pos-row"><span>CET mensal</span><span id="rd_cm_p1">0,00 %</span></div>
-        <div class="pos-row"><span>CET anual</span><span id="rd_ca_p1">0,00 %</span></div>
+        <div class="pos-row"><span>CET anual</span><span style="display:inline-flex;align-items:center;gap:8px;"><span id="rd_ca_p1">0,00 %</span><button type="button" class="ace-eye" onclick="AnaliticoCet.abrir('p1_prazo')" title="Ver memória de cálculo"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button></span></div>
       </div>
       <div class="pos-card p2">
         <h4>Proposta 2<span class="tag">P2</span></h4>
@@ -279,7 +283,7 @@
         <div class="pos-row"><span>Prazo restante</span><span id="rd_prazo_p2">0</span></div>
         <div class="pos-row"><span>Custo da operação</span><span id="rd_custo_p2">R$ 0,00</span></div>
         <div class="pos-row"><span>CET mensal</span><span id="rd_cm_p2">0,00 %</span></div>
-        <div class="pos-row"><span>CET anual</span><span id="rd_ca_p2">0,00 %</span></div>
+        <div class="pos-row"><span>CET anual</span><span style="display:inline-flex;align-items:center;gap:8px;"><span id="rd_ca_p2">0,00 %</span><button type="button" class="ace-eye" onclick="AnaliticoCet.abrir('p2_prazo')" title="Ver memória de cálculo"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button></span></div>
       </div>
     </div>
 
@@ -288,6 +292,7 @@
 
   <div class="actions">
     <button class="secondary" id="btnLimpar">Limpar tudo</button>
+    <button class="primary" id="btnPdf">Baixar PDF</button>
   </div>
 </main>
 
@@ -406,6 +411,67 @@ $('resetP1').addEventListener('click',()=>resetProposta('p1'));
 $('resetP2').addEventListener('click',()=>resetProposta('p2'));
 $('btnLimpar').addEventListener('click',()=>{ resetProposta('p1'); resetProposta('p2'); });
 
+// ─── BAIXAR PDF (PdfMasterPrime, retrato) ───
+function _coletarBlocosConsXCons() {
+  const _v = id => ($(id)?.value || $(id)?.textContent || '').trim() || '-';
+  const _sel = id => $(id)?.options?.[$(id).selectedIndex]?.text || '-';
+  const _both = (id_p1, id_p2, fn = _v) => [fn(id_p1), fn(id_p2)];
+
+  return [
+    { tipo:'tabela-secao', titulo:'DETALHES DA PROPOSTA', linhas:[
+      { label:'Crédito',                 valores: _both('credito_p1','credito_p2') },
+      { label:'Prazo',                   valores: [_v('prazo_p1') + ' meses', _v('prazo_p2') + ' meses'] },
+      { label:'Taxa de administração',   valores: _both('taxaAdm_p1','taxaAdm_p2') },
+      { label:'Fundo de reserva',        valores: _both('fundo_p1','fundo_p2') },
+      { label:'Tipo de reajuste',        valores: _both('tipoReajuste_p1','tipoReajuste_p2', _sel) },
+      { label:'Reajuste',                valores: _both('reajuste_p1','reajuste_p2') },
+      { label:'Parcela inicial',         valores: _both('parcelaInicial_p1','parcelaInicial_p2') }
+    ]},
+    { tipo:'tabela-secao', titulo:'DETALHES DA CONTEMPLAÇÃO', linhas:[
+      { label:'Expectativa',             valores: [_v('expectativa_p1') + ' meses', _v('expectativa_p2') + ' meses'] },
+      { label:'Crédito atualizado',      valores: _both('creditoAtualizado_p1','creditoAtualizado_p2') },
+      { label:'Valor de referência',     valores: _both('valorRef_p1','valorRef_p2') },
+      { label:'Lance recursos próprios', valores: _both('lanceP_v_p1','lanceP_v_p2') },
+      { label:'Total de lance',          valores: _both('lanceTotalCalc_p1','lanceTotalCalc_p2') },
+      { label:'Crédito disponível',      valores: _both('creditoDisponivel_p1','creditoDisponivel_p2') }
+    ]},
+    { tipo:'tabela-secao', titulo:'PÓS CONTEMPLAÇÃO · REDUÇÃO DE PARCELA', linhas:[
+      { label:'Parcela',                 valores: _both('rp_parc_p1','rp_parc_p2') },
+      { label:'Prazo restante',          valores: [_v('rp_prazo_p1') + ' meses', _v('rp_prazo_p2') + ' meses'] },
+      { label:'Custo da operação',       valores: _both('rp_custo_p1','rp_custo_p2') },
+      { label:'Custo efetivo mensal',    valores: _both('rp_cm_p1','rp_cm_p2'), destaque:true },
+      { label:'Custo efetivo anual',     valores: _both('rp_ca_p1','rp_ca_p2'), destaque:true }
+    ]},
+    { tipo:'tabela-secao', titulo:'PÓS CONTEMPLAÇÃO · REDUÇÃO DE PRAZO', linhas:[
+      { label:'Parcela',                 valores: _both('rd_parc_p1','rd_parc_p2') },
+      { label:'Prazo restante',          valores: [_v('rd_prazo_p1') + ' meses', _v('rd_prazo_p2') + ' meses'] },
+      { label:'Custo da operação',       valores: _both('rd_custo_p1','rd_custo_p2') },
+      { label:'Custo efetivo mensal',    valores: _both('rd_cm_p1','rd_cm_p2'), destaque:true },
+      { label:'Custo efetivo anual',     valores: _both('rd_ca_p1','rd_ca_p2'), destaque:true }
+    ]}
+  ];
+}
+
+$('btnPdf').addEventListener('click', async () => {
+  const btn = $('btnPdf');
+  const t = btn.textContent;
+  btn.textContent = 'Gerando PDF...';
+  btn.disabled = true;
+  try {
+    await PdfMasterPrime.gerar({
+      tituloEstrategia: 'Consórcio X Consórcio',
+      filename: 'master-prime-consorcio-x-consorcio',
+      blocos: _coletarBlocosConsXCons()
+    });
+  } catch (err) {
+    console.error(err);
+    alert('Erro ao gerar PDF: ' + err.message);
+  } finally {
+    btn.textContent = t;
+    btn.disabled = false;
+  }
+});
+
 // === Cálculo de uma proposta ===
 function calcProposta(s) {
   const credito = unmaskMoney($(`credito_${s}`).value);
@@ -491,16 +557,21 @@ function calcProposta(s) {
     return sum;
   }
   function cetConsorcio(parcelaPos, prazoFinal) {
-    // Fórmula do Op. Simples (validada centavo-a-centavo com Conkey):
-    //   custo = crédito × (taxaAdm + fundo)
-    //   disponível = crédito − lanceProprios
-    //   mensal = (1 + custo/disponível)^(1/prazoEf) − 1
+    // Fórmula Conkey v2 (engenharia reversa, com reajuste cumulativo):
+    //   total_pagas = Σ parcelas pagas com reajuste (pré + pós contemplação)
+    //   custo       = total_pagas + lance total − crédito  (custo financeiro real)
+    //   disponível  = crédito − lance próprios             (capital líquido do tomador)
+    //   mensal_real = (1 + custo / disponível)^(1 / prazoEf) − 1
+    //   mensal_arred = arredondado p/ 4 casas (= 2 casas no %)
+    //   anual       = (1 + mensal_arred)^12 − 1
+    // A v1 usava custo = (adm+fr) × crédito (nominal), o que ignorava o
+    // reajuste cumulativo e dava CET ~33% menor que Conkey.
     const disponivel = credito - lanceProprios_v;
     if(prazoFinal <= 0 || disponivel <= 0) return {m:0, a:0};
-    const custo = credito * (taxaAdm + fundo);
+    const totalPagas = calcSumParcelas(parcelaPos, prazoFinal);
+    const custo = totalPagas + valorTotalLance - credito;
     const ratio = custo / disponivel;
     const mensalReal = Math.pow(1 + ratio, 1/prazoFinal) - 1;
-    // Conkey arredonda para 4 casas decimais antes de calcular o anual
     const mm = Math.round(mensalReal * 10000) / 10000;
     const aa = Math.pow(1+mm, 12) - 1;
     return {m: mm*100, a: aa*100};
@@ -520,6 +591,40 @@ function calcProposta(s) {
   $(`rd_custo_${s}`).textContent = fmtMoney(custoOpB);
   $(`rd_cm_${s}`).textContent = fmtPct(cetB.m, 2);
   $(`rd_ca_${s}`).textContent = fmtPct(cetB.a, 2);
+
+  // Salva estado para o modal Analítico (proposta s = p1 ou p2)
+  if (window.AnaliticoCet) {
+    const baseDados = {
+      credito: credito,
+      taxaAdm: taxaAdm,
+      fundo: fundo,
+      lanceProprios: lanceProprios_v,
+      valorTotalLance: valorTotalLance,
+      parcelaInicial: parcelaAtualNoMomento,
+      parcelaBase: parcelaBase,
+      expectativa: expectativa,
+      reajuste: reajuste,
+      tipoReajuste: tipoReajuste,
+      period: periodoReaj,
+    };
+    const labelProp = s === 'p1' ? 'Proposta 1' : 'Proposta 2';
+    AnaliticoCet.set(`${s}_parcela`, Object.assign({}, baseDados, {
+      titulo: `${labelProp} · Redução de parcela`,
+      prazoEf: prazo,
+      parcelaPos: parcReducaoParcela,
+      prazoRestPos: prazoRestante,
+      cetMensal: cetA.m / 100,
+      cetAnual: cetA.a / 100,
+    }));
+    AnaliticoCet.set(`${s}_prazo`, Object.assign({}, baseDados, {
+      titulo: `${labelProp} · Redução de prazo`,
+      prazoEf: expectativa + novoPrazoReducao,
+      parcelaPos: parcReducaoPrazo,
+      prazoRestPos: novoPrazoReducao,
+      cetMensal: cetB.m / 100,
+      cetAnual: cetB.a / 100,
+    }));
+  }
 
   return { custoOpA, custoOpB, cetA, cetB };
 }

@@ -60,6 +60,10 @@
 </style>
 <script>if (new URLSearchParams(location.search).get('embed') === '1') document.documentElement.classList.add('embedded');</script>
 <style>html.embedded header { display: none; } html.embedded main { padding-top: 16px; }</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="pdf-master-prime.js"></script>
+<script src="analitico-cet.js"></script>
 </head>
 <body>
 <header><div class="brand"><div class="brand-mark">M</div><div class="brand-text"><h1>Master Prime</h1><p>Simulador de Consórcio</p></div></div></header>
@@ -139,14 +143,14 @@
         <div class="pos-row"><span>Parcela</span><span id="reducaoParcela_parc">R$ 0,00</span></div>
         <div class="pos-row"><span>Prazo restante</span><span id="reducaoParcela_prazo">0</span></div>
         <div class="pos-row"><span>Custo efetivo mensal</span><span id="reducaoParcela_cm">0,00 %</span></div>
-        <div class="pos-row"><span>Custo efetivo anual</span><span id="reducaoParcela_ca">0,00 %</span></div>
+        <div class="pos-row"><span>Custo efetivo anual</span><span style="display:inline-flex;align-items:center;gap:8px;"><span id="reducaoParcela_ca">0,00 %</span><button type="button" class="ace-eye" onclick="AnaliticoCet.abrir('parcela')" title="Ver memória de cálculo"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button></span></div>
       </div>
       <div class="pos-card">
         <h4>Pós contemplação - Redução de prazo</h4>
         <div class="pos-row"><span>Parcela</span><span id="reducaoPrazo_parc">R$ 0,00</span></div>
         <div class="pos-row"><span>Prazo restante</span><span id="reducaoPrazo_prazo">0</span></div>
         <div class="pos-row"><span>Custo efetivo mensal</span><span id="reducaoPrazo_cm">0,00 %</span></div>
-        <div class="pos-row"><span>Custo efetivo anual</span><span id="reducaoPrazo_ca">0,00 %</span></div>
+        <div class="pos-row"><span>Custo efetivo anual</span><span style="display:inline-flex;align-items:center;gap:8px;"><span id="reducaoPrazo_ca">0,00 %</span><button type="button" class="ace-eye" onclick="AnaliticoCet.abrir('prazo')" title="Ver memória de cálculo"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button></span></div>
       </div>
     </div>
   </section>
@@ -407,20 +411,46 @@ function recalc(){
   const parcReducaoPrazo = parcelaAtualNoMomento;
   const novoPrazoReducao = parcReducaoPrazo > 0 ? Math.ceil(saldoApoLance / parcReducaoPrazo) : 0;
 
-  // CET — fórmula descoberta por engenharia reversa: (1 + custo/(credito-lance_total))^(1/prazoEf) - 1
-  // Reduç Parcela: prazoEf = prazo total | Reduç Prazo: prazoEf = expectativa + novoPrazoRestante
-  // Denominador usa credito - lance_total (próprios + embutido + fgts)
-  function cet(prazoEf) {
+  // CET — fórmula Conkey v2 (engenharia reversa, com reajuste cumulativo):
+  //   total_pagas = Σ parcelas pagas com reajuste (pré + pós contemplação)
+  //   custo       = total_pagas + lance total − crédito (custo financeiro real)
+  //   disp        = crédito × (1 − lance total %)       (capital líquido — convenção Alavancagem)
+  //   prazoEf Reduç Parcela = prazo total
+  //   prazoEf Reduç Prazo   = expectativa + novo prazo (efetivo de pagamento)
+  //   mensal_real = (1 + custo / disp)^(1 / prazoEf) − 1
+  //   mensal_arred = arredondado p/ 4 casas (= 2 casas no %)
+  //   anual = (1 + mensal_arred)^12 − 1
+  // A v1 usava custo = (adm+fr) × crédito (nominal), o que ignorava o
+  // reajuste cumulativo nas parcelas. CET ficava ~33% menor que Conkey.
+  function totalParcelasComReajuste(parcelaPosCont, prazoPosCont) {
+    let total = 0;
+    let pAtual = parcelaBase;
+    // Pré-contemplação (mesma convenção do saldo: reaj só se m < expectativa)
+    for (let m = 1; m <= expectativa; m++) {
+      total += pAtual;
+      if (reajuste > 0 && tipoReajuste && m % 12 === 0 && m < expectativa) pAtual *= (1 + reajuste);
+    }
+    // Pós-contemplação (reaj continua nos aniversários)
+    let pPos = parcelaPosCont;
+    for (let m = expectativa + 1; m <= expectativa + prazoPosCont; m++) {
+      total += pPos;
+      if (reajuste > 0 && tipoReajuste && m % 12 === 0) pPos *= (1 + reajuste);
+    }
+    return total;
+  }
+  function cet(prazoEf, parcelaPosCont, prazoPosCont) {
     const lanceTotal_pct = pP + pE + pFGTS;
     const disp = credito * (1 - lanceTotal_pct);
     if(prazoEf <= 0 || disp <= 0) return {m:0, a:0};
-    const ratio = (credito*(taxaAdm+fundo)) / disp;
+    const totalPagas = totalParcelasComReajuste(parcelaPosCont, prazoPosCont);
+    const custo = totalPagas + valorTotalLance - credito;
+    const ratio = custo / disp;
     const m = Math.round((Math.pow(1+ratio, 1/prazoEf) - 1) * 10000) / 10000;
     const a = Math.pow(1+m, 12) - 1;
     return {m: m*100, a: a*100};
   }
-  const cetA = cet(prazo);
-  const cetB = cet(expectativa + novoPrazoReducao);
+  const cetA = cet(prazo,                            parcReducaoParcela, prazoRestante);
+  const cetB = cet(expectativa + novoPrazoReducao,   parcReducaoPrazo,   novoPrazoReducao);
   document.getElementById('reducaoParcela_parc').textContent = fmtMoney(parcReducaoParcela);
   document.getElementById('reducaoParcela_prazo').textContent = prazoRestante;
   document.getElementById('reducaoParcela_cm').textContent = fmtPct(cetA.m, 2);
@@ -429,6 +459,40 @@ function recalc(){
   document.getElementById('reducaoPrazo_prazo').textContent = novoPrazoReducao;
   document.getElementById('reducaoPrazo_cm').textContent = fmtPct(cetB.m, 2);
   document.getElementById('reducaoPrazo_ca').textContent = fmtPct(cetB.a, 2);
+
+  // Salva estado para o modal Analítico (memória de cálculo)
+  if (window.AnaliticoCet) {
+    const lanceTotalValor = credito * (pP + pE + pFGTS);
+    const baseDados = {
+      credito: credito,
+      taxaAdm: taxaAdm,
+      fundo: fundo,
+      lanceProprios:   lanceTotalValor, // Alavancagem usa lance total no denominador
+      valorTotalLance: lanceTotalValor, // mesmo valor (custo financeiro)
+      parcelaInicial:  parcelaAtualNoMomento,
+      parcelaBase:     parcelaBase,
+      expectativa:     expectativa,
+      reajuste:        reajuste,
+      tipoReajuste:    tipoReajuste,
+      period:          12, // Alavancagem usa reaj anual fixo (m % 12 === 0)
+    };
+    AnaliticoCet.set('parcela', Object.assign({}, baseDados, {
+      titulo: 'Pós contemplação · Redução de parcela',
+      prazoEf: prazo,
+      parcelaPos: parcReducaoParcela,
+      prazoRestPos: prazoRestante,
+      cetMensal: cetA.m / 100,
+      cetAnual: cetA.a / 100,
+    }));
+    AnaliticoCet.set('prazo', Object.assign({}, baseDados, {
+      titulo: 'Pós contemplação · Redução de prazo',
+      prazoEf: expectativa + novoPrazoReducao,
+      parcelaPos: parcReducaoPrazo,
+      prazoRestPos: novoPrazoReducao,
+      cetMensal: cetB.m / 100,
+      cetAnual: cetB.a / 100,
+    }));
+  }
 
   // === IMÓVEL ===
   const imValor = unmaskMoney(document.getElementById('imValor').value);
@@ -544,7 +608,89 @@ document.getElementById('btnLimpar').addEventListener('click',()=>{
   document.getElementById('resetConsorcio').click();
   document.getElementById('resetImovel').click();
 });
-document.getElementById('btnPdf').addEventListener('click',()=>alert('Baixar PDF — implementação pendente.'));
+// ─── COLETA DE BLOCOS PARA O PDF ───
+function _coletarBlocosAlavancagem() {
+  const _v = id => (document.getElementById(id)?.value || document.getElementById(id)?.textContent || '').trim() || '-';
+  const _sel = id => { const el = document.getElementById(id); return el?.options?.[el.selectedIndex]?.text || '-'; };
+
+  return [
+    { tipo:'card', titulo:'DADOS DA COTA', linhas:[
+      { campos:[
+        { label:'Crédito',                 value: _v('credito') },
+        { label:'Prazo',                   value: _v('prazo') + ' meses' },
+        { label:'Taxa de administração',   value: _v('taxaAdm') },
+        { label:'Fundo de reserva',        value: _v('fundo') }
+      ], destaque:{ label:'Parcela inicial', value: _v('parcelaInicial') }},
+      { campos:[
+        { label:'Tipo de reajuste',        value: _sel('tipoReajuste') },
+        { label:'Reajuste',                value: _v('reajuste') }
+      ]}
+    ]},
+    { tipo:'card', titulo:'DETALHES DA CONTEMPLAÇÃO', linhas:[
+      { campos:[
+        { label:'Modalidade',              value: _sel('tipoContemplacao') },
+        { label:'Expectativa',             value: _v('expectativa') + ' meses' },
+        { label:'Crédito atualizado',      value: _v('creditoAtualizado') },
+        { label:'Base de cálculo',         value: _sel('tipoLance') }
+      ], destaque:{ label:'Crédito disponível', value: _v('creditoDisponivel') }},
+      { campos:[
+        { label:'Valor de referência',     value: _v('valorRef') },
+        { label:'Recursos próprios',       value: _v('lanceP') + ' | ' + _v('lanceP_v') },
+        { label:'Total de lance',          value: _v('lanceTotalCalc') }
+      ]}
+    ]},
+    { tipo:'tabela', titulo:'COMPARATIVO APÓS CONTEMPLAÇÃO',
+      colunas:['REDUÇÃO DE PARCELA','REDUÇÃO DE PRAZO'],
+      linhas:[
+        { label:'Parcela',                 valores:[_v('reducaoParcela_parc'),  _v('reducaoPrazo_parc')] },
+        { label:'Prazo restante',          valores:[_v('reducaoParcela_prazo')+' meses', _v('reducaoPrazo_prazo')+' meses'] },
+        { label:'CET (Custo Efetivo Total)', valores:[_v('reducaoParcela_cm')+' ao mês | '+_v('reducaoParcela_ca')+' ao ano', _v('reducaoPrazo_cm')+' ao mês | '+_v('reducaoPrazo_ca')+' ao ano'] }
+      ]
+    },
+    { tipo:'card', titulo:'OPERAÇÃO: IMÓVEL', linhas:[
+      { campos:[
+        { label:'Valor de mercado',         value: _v('imValor') },
+        { label:'Valor de compra',          value: _v('imCompra') },
+        { label:'Índice de valorização anual', value: _v('imValorizacao') }
+      ]}
+    ]},
+    { tipo:'card', titulo:'OPERAÇÃO: ALUGUEL', linhas:[
+      { campos:[
+        { label:'Prestação do aluguel',     value: _v('alPrestacao') },
+        { label:'% de aluguel',             value: _v('alPct') },
+        { label:'Índice de correção anual', value: _v('alCorrecao') },
+        { label:'Aluguel × parcela (média)', value: _v('alDiferenca') }
+      ]}
+    ]},
+    { tipo:'card', titulo:'RESULTADO DA ALAVANCAGEM', linhas:[
+      { campos:[
+        { label:'Valor alavancado do imóvel', value: _v('resAlavancado') },
+        { label:'Valorização do imóvel',      value: _v('resValorizacao') },
+        { label:'Aluguel × parcela (período)', value: _v('resDiferenca') }
+      ], destaque:{ label:'Patrimônio total', value: _v('resPatrimonio') }}
+    ]}
+  ];
+}
+
+document.getElementById('btnPdf').addEventListener('click', async () => {
+  const btn = document.getElementById('btnPdf');
+  const t = btn.textContent;
+  btn.textContent = 'Gerando PDF...';
+  btn.disabled = true;
+  try {
+    await PdfMasterPrime.gerar({
+      tituloEstrategia: 'Alavancagem Patrimonial',
+      filename: 'master-prime-alavancagem-patrimonial',
+      blocos: _coletarBlocosAlavancagem()
+    });
+  } catch (err) {
+    console.error(err);
+    alert('Erro ao gerar PDF: ' + err.message);
+  } finally {
+    btn.textContent = t;
+    btn.disabled = false;
+  }
+});
 
 // Init
 ['tipoLance','lanceP','lanceE','lanceFGTS','fpEntrada'].forEach(id=>document.getElementById(id).disabled=true);
